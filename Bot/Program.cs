@@ -10,11 +10,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Bot.Services;
+using Microsoft.Data.Sqlite;
 
 namespace Bot
 {
     class Program
     {
+        static void ExecuteSQL(string cmd)
+        {
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                SqliteCommand command = new SqliteCommand();
+                command.Connection = connection;
+                command.CommandText = cmd;
+                command.ExecuteNonQuery();
+            }
+        }
+
         static async Task Main()
         {
             var builder = new HostBuilder()
@@ -54,7 +67,13 @@ namespace Bot
                     services.AddHostedService<CommandHandler>();
                 })
                 .UseConsoleLifetime();
+
+            //ExecuteSQL("DROP TABLE users");
+            ExecuteSQL("CREATE TABLE IF NOT EXISTS users (discord_id INTEGER NOT NULL UNIQUE, level INTEGER NOT NULL, archetype VARCHAR(100) NOT NULL, type VARCHAR(100) NOT NULL, weapon INTEGER, hat INTEGER, body INTEGER, legs INTEGER, boots INTEGER, gloves INTEGER)");
+            //ExecuteSQL("CREATE TABLE IF NOT EXISTS inventory (discord_id INTEGER, level INTEGER, archetype VARCHAR(100), type VARCHAR(100), weapon INTEGER, hat INTEGER, body INTEGER, legs INTEGER, boots INTEGER, gloves INTEGER)");
             
+
+
             var host = builder.Build();
             using (host)
             {
