@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Bot.Types.Magic
+namespace Bot.Types.Melee
 {
-    class Druid : Archetype
+    class Rogue : Archetype
     {
-        public Druid(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Rogue(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

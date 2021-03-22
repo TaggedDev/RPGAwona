@@ -6,7 +6,7 @@ namespace Bot.Types.Ranged
 {
     class Thrower : Archetype
     {
-        public Thrower(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Thrower(string name, ulong id, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;
@@ -15,5 +15,16 @@ namespace Bot.Types.Ranged
             _luck = luck + 0.21f;
             _dodge = dodge + 0.17f;
         }
+
+        public Thrower(string name, ulong id)
+        {
+            _name = name;
+            _id = id;
+            _health = 775;
+            _damage = 60;
+            _luck = 0.21f;
+            _dodge = 0.17f;
+        }
+
     }
 }

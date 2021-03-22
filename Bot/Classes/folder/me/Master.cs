@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Bot.Types.Melee
 {
-    class Landmeister : Archetype
+    class Master : Archetype
     {
-        public Landmeister(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Master(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

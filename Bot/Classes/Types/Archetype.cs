@@ -6,19 +6,32 @@ namespace Bot.Types
 {
     abstract class Archetype
     {
-        protected string _name { get; set; } // Username#0000
-        protected int _id { get; set;  } // discord id 
-        protected string _race { get; } // current race 
-        protected int _health { get; set; } // health point
-        protected int _lvl { get; set; }
-        protected int _defence { get; set; } // health point
-        protected int _damage { get; set; } // damage parameter
-        protected float _luck { get; set; } // luck parameter
-        protected float _multiplier { get; set; } // luck multiplier
-        protected float _dodge { get; set; } // dodge chance
-        protected string _move { get; set; } // player's choose
+        protected string _name; // Username#0000
+        protected ulong _id; // discord id 
+        protected string _race; // current race 
+        protected int _health; // health point
+        protected int _lvl;
+        protected int _defence; // health point
+        protected int _damage; // damage parameter
+        protected float _luck; // luck parameter
+        protected float _multiplier; // luck multiplier
+        protected float _dodge; // dodge chance
+        protected string _move; // player's choose
 
-        public bool IsCrit(float chance)
+        public virtual string Name { get => _name; set => _name = value; } // Username#0000
+        public virtual ulong Id { get; set; } // discord id 
+        public virtual string Race { get; set; } // current race 
+        public virtual int Health { get => _health; set => _health = value; } // health point
+        public virtual int Lvl { get => _lvl; set => _lvl = value; }
+        public virtual int Defence { get => _defence; set => _defence = value; } // health point
+        public virtual int Damage { get => _damage; set => _damage = value; } // damage parameter
+        public virtual float Luck { get => _luck; set => _luck = value; } // luck parameter
+        public virtual float Multiplier { get => _multiplier; set => _multiplier = value; } // luck multiplier
+        public virtual float Dodge { get => _dodge; set => _dodge = value; } // dodge chance
+        public virtual string Move { get => _move; set => _move = value; } // player's choose
+
+
+        /*abstract public bool IsCrit(float chance)
         {
             Random rnd = new Random();
             double result = rnd.NextDouble();
@@ -26,7 +39,7 @@ namespace Bot.Types
                 return true;
             return false;
         }
-        public int Attack(Archetype attackerCharacter, Archetype defenderCharacter)
+        abstract public int Attack(Archetype attackerCharacter, Archetype defenderCharacter)
         {
             float attackerMultiplier, attackerCritChance;
             int attackerDamage, defenderArmor;
@@ -64,6 +77,6 @@ namespace Bot.Types
             }
             else
                 return -1;
-        }
+        }*/
     }
 }

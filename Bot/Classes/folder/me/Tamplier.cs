@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Bot.Types.Faith
+namespace Bot.Types.Melee
 {
-    class Cardinal : Archetype
+    class Tamplier : Archetype
     {
-        public Cardinal(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Tamplier(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

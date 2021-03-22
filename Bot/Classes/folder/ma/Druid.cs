@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Bot.Types.Magic
 {
-    class Mage : Archetype
+    class Druid : Archetype
     {
-        public Mage(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Druid(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

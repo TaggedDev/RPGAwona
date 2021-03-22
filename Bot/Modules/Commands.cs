@@ -1,10 +1,17 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Bot.Types.Melee;
+using Bot.Types.Faith;
+using Bot.Types.Ranged;
+using Bot.Types.Magic;
+using Bot.Types;
+using Discord.WebSocket;
 
 namespace Bot.Modules
 {
@@ -27,7 +34,7 @@ namespace Bot.Modules
             }
         }
 
-        static bool alreadyCreated(string id)
+        static bool AlreadyCreated(string id)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
@@ -49,12 +56,39 @@ namespace Bot.Modules
             return false;
         }
 
-        [Command("create")]
-        public async Task createCharacter(string archetype)
+        static object GetFieldSQL(string field, ulong id, string sqlExpression)
         {
-            //_logger.LogInformation($"{Context.User.Id} executed the create command");
-            //Context.User.Id
-            if (!alreadyCreated(Convert.ToString(Context.User.Id)))
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                //string sqlExpression = "SELECT discord_id FROM users";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(Convert.ToString(id)))
+                            {
+                                if (field.Equals("level"))
+                                    return reader["level"];
+                                else if (field.Equals("archetype"))
+                                    return reader["archetype"];
+                                else if (field.Equals("type"))
+                                    return reader["type"];
+                            }
+                        }
+                }
+            }
+            return null;
+        }
+
+        [Command("create")]
+        [Alias("create_character")]
+        public async Task CreateCharacter(string archetype)
+        {
+            if (!AlreadyCreated(Convert.ToString(Context.User.Id)))
             {
                 int level;
                 string type, discord_id;
@@ -96,12 +130,13 @@ namespace Bot.Modules
         }
     
         [Command("delete")] 
-        public async Task deleteCharacter()
+        [Alias("delete_character")]
+        public async Task DeleteCharacter()
         {
             string id, command;
             id = Convert.ToString(Context.User.Id);
             command = $"DELETE FROM users WHERE discord_id = {id}";
-            if (alreadyCreated(id))
+            if (AlreadyCreated(id))
             { 
                 ExecuteSQL(command);
                 await ReplyAsync(":white_check_mark: Персонаж успешно удалён");
@@ -110,6 +145,120 @@ namespace Bot.Modules
                 await ReplyAsync(":x: У вас ещё нет персонажа.");
 
 
+        }
+
+        [Command("character")]
+        [Alias("char", "c")]
+        public async Task CharacterWindow()
+        {
+            string type, archetype;
+            int level;
+
+            type = Convert.ToString(GetFieldSQL("type", Context.User.Id, "SELECT discord_id, type FROM users"));
+            archetype = Convert.ToString(GetFieldSQL("archetype", Context.User.Id, "SELECT discord_id, archetype FROM users"));
+            level = Convert.ToInt32(GetFieldSQL("level", Context.User.Id, "SELECT discord_id, level FROM users"));
+            char firstLetter = archetype[0];
+            archetype = char.ToUpper(firstLetter) + archetype.Substring(1);
+
+            uint color = archetype switch
+            {
+                ("Faith") => 0xE7EB2D,
+                ("Ranged") => 0x2DEB8C,
+                ("Magic") => 0xD52DEB,
+                ("Melee") => 0xCF3232,
+                _ => 0xE0D41B,
+            };
+
+            int damage, health, armor;
+            float luck, agility;
+
+            string name;
+            ulong discord_id;
+            name = Context.User.Username + "#" + Context.User.Discriminator;
+            discord_id = Context.User.Id;
+
+            Console.WriteLine(type);
+
+            switch (type)
+            {
+                case ("Acolyte"):
+                    Acolyte acolyte = new Acolyte(name, discord_id);
+                    damage = acolyte.Damage;
+                    health = acolyte.Health;
+                    armor = acolyte.Defence;
+                    luck = acolyte.Luck;
+                    agility = acolyte.Dodge;
+                    break;
+                case ("Komtur"):
+                    Komtur komtur = new Komtur(name, discord_id);
+                    damage = komtur.Damage;
+                    health = komtur.Health;
+                    armor = komtur.Defence;
+                    luck = komtur.Luck;
+                    agility = komtur.Dodge;
+                    break;
+                case ("Thrower"):
+                    Thrower thrower = new Thrower(name, discord_id);
+                    damage = thrower.Damage;
+                    health = thrower.Health;
+                    armor = thrower.Defence;
+                    luck = thrower.Luck;
+                    agility = thrower.Dodge;
+                    break;
+                case ("Alchemist"):
+                    Alchemist alchemist = new Alchemist(name, discord_id);
+                    damage = alchemist.Damage;
+                    health = alchemist.Health;
+                    armor = alchemist.Defence;
+                    luck = alchemist.Luck;
+                    agility = alchemist.Dodge;
+                    break;
+                default:
+                    damage = 0;
+                    health = 0;
+                    armor = 0;
+                    luck = 0;
+                    agility = 0;
+                    break;
+            }
+
+            var builder = new EmbedBuilder()
+                .WithTitle($"{name}")
+                .WithDescription($"**Окно персонажа**\n\nКласс: {type}\nАрхетип: {archetype}\nУровень: {level}\n")
+                //.WithUrl("https://discordapp.com")
+                .WithColor(new Color(color))
+                .WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(1616356046810))
+                .WithFooter(footer => {
+                    footer
+                        .WithText("footer text")
+                        .WithIconUrl("https://cdn.discordapp.com/embed/avatars/0.png");
+                })
+                .WithThumbnailUrl("https://cdn.discordapp.com/embed/avatars/0.png")
+                .WithAuthor(author => {
+                    author
+                        .WithName("Awona")
+                        .WithUrl("https://discordapp.com")
+                        .WithIconUrl("https://cdn.discordapp.com/embed/avatars/0.png");
+                })
+                .AddField("Урон", $"{damage}")
+                .AddField("Здоровье", $"{health}")
+                .AddField("Защита", $"{armor}")
+                .AddField("Удача", $"{luck}")
+                .AddField("Ловкость", $"{agility}");
+                        var embed = builder.Build();
+                        await Context.Channel.SendMessageAsync(
+                            null,
+                            embed: embed)
+                            .ConfigureAwait(false);
+
+
+        }
+    
+        [Command("challenge")]
+        [Alias("versus", "fight", "vs", "destroy")]
+        public async Task Challenge(SocketGuildUser user = null)
+        {
+            await Context.User.SendMessageAsync("!");
         }
     }
 }

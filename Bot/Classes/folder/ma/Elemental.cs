@@ -6,7 +6,7 @@ namespace Bot.Types.Magic
 {
     class Elemental : Archetype
     {
-        public Elemental(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Elemental(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

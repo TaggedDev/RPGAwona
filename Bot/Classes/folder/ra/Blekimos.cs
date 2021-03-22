@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Bot.Types.Melee
+namespace Bot.Types.Ranged
 {
-    class Tamplier : Archetype
+    class Blekimos : Archetype
     {
-        public Tamplier(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Blekimos(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

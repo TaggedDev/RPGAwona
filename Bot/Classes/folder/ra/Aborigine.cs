@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Bot.Types.Magic
+namespace Bot.Types.Ranged
 {
-    class Shaman : Archetype
+    class Aborigine : Archetype
     {
-        public Shaman(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Aborigine(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;

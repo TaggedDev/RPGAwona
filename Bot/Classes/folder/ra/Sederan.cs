@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Bot.Types.Ranged
 {
-    class Opinary : Archetype
+    class Sederan : Archetype
     {
-        public Opinary(string name, int id, string race, int health, int damage, float luck, float dodge)
+        public Sederan(string name, ulong id, string race, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;
