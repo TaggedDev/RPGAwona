@@ -11,18 +11,20 @@ using Bot.Types.Faith;
 using Bot.Types.Ranged;
 using Bot.Types.Magic;
 using Bot.Types;
+using Bot.Services;
 using Discord.WebSocket;
+using Discord.Rest;
 
 namespace Bot.Modules
 {
     public class Commands : ModuleBase<SocketCommandContext>
     {
         private readonly ILogger<Commands> _logger;
-
+        
         public Commands(ILogger<Commands> logger)
             => _logger = logger;
 
-        static void ExecuteSQL(string cmd)
+        public static void ExecuteSQL(string cmd)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
@@ -258,7 +260,27 @@ namespace Bot.Modules
         [Alias("versus", "fight", "vs", "destroy")]
         public async Task Challenge(SocketGuildUser user = null)
         {
-            await Context.User.SendMessageAsync("!");
+            //Overwrite overwrite = new Overwrite();
+            var permissions = new ChannelPermissions(viewChannel: false);
+            
+
+            string authorname, username;
+            authorname = Context.Message.Author.Username;
+            username = user.Username;
+            
+            
+
+            await Context.Guild.CreateCategoryChannelAsync($"{authorname}-vs-{username}");
+            ITextChannel authorchannel = await Context.Guild.CreateTextChannelAsync($"{authorname}-challenge");
+            ITextChannel userchannel = await Context.Guild.CreateTextChannelAsync($"{username}-challenge");
+
+            
+
+            /*await authorchannel.ModifyAsync(x =>
+            {
+                x.
+            });*/
+
         }
     }
 }
