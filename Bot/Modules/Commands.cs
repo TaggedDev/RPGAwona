@@ -259,7 +259,10 @@ namespace Bot.Modules
         [Command("challenge")]
         [Alias("versus", "fight", "vs", "destroy")]
         public async Task Challenge(SocketGuildUser user = null)
-        { 
+        {
+            SocketUser messageAuthor = Context.Message.Author;
+            SocketGuildUser author = (messageAuthor as SocketGuildUser);
+
             // Check is user parameter is invalid
             if (user == null)
             {
@@ -277,6 +280,14 @@ namespace Bot.Modules
                 return;
             }
 
+            // Check if its a versus channel
+            if (Context.Channel.Id != 823844887787077682)
+            {
+                await ReplyAsync("Бросать вызов в другом месте! Вам нужно в трактир - <#823844887787077682>");
+                return;
+            }
+                
+
             string authorname, username;
             authorname = Context.Message.Author.Username;
             username = user.Username;
@@ -287,9 +298,9 @@ namespace Bot.Modules
 
             // Create Roles
             IRole everyone = Context.Guild.EveryoneRole;
-            IRole publicrole = await Context.Guild.CreateRoleAsync($"{authorname}-vs-{username}", null, new Color(0x2E2E2E), false, null);
-            IRole firstplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0x2E2E2E), false, null);
-            IRole secondplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0x2E2E2E), false, null);
+            IRole publicrole = await Context.Guild.CreateRoleAsync($"{authorname}-vs-{username}", null, new Color(0xf5fffa), false, null);
+            IRole firstplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0xf5fffa), false, null);
+            IRole secondplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0xf5fffa), false, null);
             // Create Permissions
             OverwritePermissions noView = new OverwritePermissions(viewChannel: PermValue.Deny);
             OverwritePermissions yesView = new OverwritePermissions(viewChannel: PermValue.Allow);
@@ -319,11 +330,22 @@ namespace Bot.Modules
             await userchannel.AddPermissionOverwriteAsync(secondplayer, noView);
             await userchannel.ModifyAsync(x => x.CategoryId = category.Id);
 
+            FightHandler fightHandler = new FightHandler();
+            await fightHandler.StartMessage(author, user, userchannel, authorchannel);
 
+            
+            Acolyte acolyte = new Acolyte(authorname, author.Id);
+            Thrower thrower = new Thrower(username, user.Id);
 
-
+            while (true)
+            {
+                
+                await fightHandler.FightMessage(author, user, acolyte, thrower, authorchannel, userchannel);
+            }
 
 
         }
+    
+        
     }
 }

@@ -30,6 +30,9 @@ namespace Bot.Types
         public virtual float Dodge { get => _dodge; set => _dodge = value; } // dodge chance
         public virtual string Move { get => _move; set => _move = value; } // player's choose
 
+        abstract public int Attack();
+        abstract public int Shield();
+        abstract public int Parry();
 
         /*abstract public bool IsCrit(float chance)
         {
