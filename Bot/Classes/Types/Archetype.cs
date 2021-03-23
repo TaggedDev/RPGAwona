@@ -20,7 +20,7 @@ namespace Bot.Types
 
         public virtual string Name { get => _name; set => _name = value; } // Username#0000
         public virtual ulong Id { get; set; } // discord id 
-        public virtual string Race { get; set; } // current race 
+        public virtual string Race { get => _race; set => _race = value; } // current race 
         public virtual int Health { get => _health; set => _health = value; } // health point
         public virtual int Lvl { get => _lvl; set => _lvl = value; }
         public virtual int Defence { get => _defence; set => _defence = value; } // health point

@@ -259,27 +259,70 @@ namespace Bot.Modules
         [Command("challenge")]
         [Alias("versus", "fight", "vs", "destroy")]
         public async Task Challenge(SocketGuildUser user = null)
-        {
-            //Overwrite overwrite = new Overwrite();
-            var permissions = new ChannelPermissions(viewChannel: false);
-            
+        { 
+            // Check is user parameter is invalid
+            if (user == null)
+            {
+                await ReplyAsync(":x: Вы не указали соперника");
+                return;
+            } 
+            else if (user != Context.Message.Author)
+            {
+                await ReplyAsync(":x: Вы не можете начать битву с собой");
+                return;
+            } 
+            else if (user.Id == 822717022374068224)
+            {
+                await ReplyAsync(":x: Вы не можете начать битву с ботом");
+                return;
+            }
 
             string authorname, username;
             authorname = Context.Message.Author.Username;
             username = user.Username;
             
-            
+            //
+            // Get everyone role, create new role, create permissions, set roles
+            //
 
-            await Context.Guild.CreateCategoryChannelAsync($"{authorname}-vs-{username}");
+            // Create Roles
+            IRole everyone = Context.Guild.EveryoneRole;
+            IRole publicrole = await Context.Guild.CreateRoleAsync($"{authorname}-vs-{username}", null, new Color(0x2E2E2E), false, null);
+            IRole firstplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0x2E2E2E), false, null);
+            IRole secondplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0x2E2E2E), false, null);
+            // Create Permissions
+            OverwritePermissions noView = new OverwritePermissions(viewChannel: PermValue.Deny);
+            OverwritePermissions yesView = new OverwritePermissions(viewChannel: PermValue.Allow);
+            // Add roles to first and second player
+            await (Context.User as IGuildUser).AddRoleAsync(publicrole);
+            await (Context.User as IGuildUser).AddRoleAsync(firstplayer);
+            await (user as IGuildUser).AddRoleAsync(publicrole);
+            await (user as IGuildUser).AddRoleAsync(secondplayer);
+
+            //
+            // Create category, set permissions, create two channels
+            //
+
+            // Create category and set permissions
+            ICategoryChannel category = await Context.Guild.CreateCategoryChannelAsync($"{authorname}-vs-{username}");
+            await category.AddPermissionOverwriteAsync(everyone, noView);
+            await category.AddPermissionOverwriteAsync(firstplayer, yesView);
+            await category.AddPermissionOverwriteAsync(secondplayer, yesView);
+            // Create channel 1
             ITextChannel authorchannel = await Context.Guild.CreateTextChannelAsync($"{authorname}-challenge");
+            await authorchannel.AddPermissionOverwriteAsync(everyone, noView);
+            await authorchannel.AddPermissionOverwriteAsync(firstplayer, yesView);
+            await authorchannel.ModifyAsync(x => x.CategoryId = category.Id);
+            // Create channel 2
             ITextChannel userchannel = await Context.Guild.CreateTextChannelAsync($"{username}-challenge");
+            await userchannel.AddPermissionOverwriteAsync(everyone, noView);
+            await userchannel.AddPermissionOverwriteAsync(secondplayer, noView);
+            await userchannel.ModifyAsync(x => x.CategoryId = category.Id);
 
-            
 
-            /*await authorchannel.ModifyAsync(x =>
-            {
-                x.
-            });*/
+
+
+
 
         }
     }
