@@ -7,13 +7,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Bot.Types.Melee;
-using Bot.Types.Faith;
 using Bot.Types.Ranged;
 using Bot.Types.Magic;
 using Bot.Types;
 using Bot.Services;
 using Discord.WebSocket;
 using Discord.Rest;
+using System.Linq;
 
 namespace Bot.Modules
 {
@@ -24,7 +24,42 @@ namespace Bot.Modules
         public Commands(ILogger<Commands> logger)
             => _logger = logger;
 
-        public static void ExecuteSQL(string cmd)
+        static bool ValidChecker(SocketGuildUser user, SocketGuildUser author, ref string answer, ulong channel_id, ulong context_id)
+        {
+            // If player is already in Battle
+            if (AlreadyInBattle(Convert.ToString(author.Id)) || AlreadyInBattle(Convert.ToString(user.Id)))
+            {
+                answer = "Один из игроков уже находится в бою, подождите и попробуйте снова";
+                return false;
+            }
+            // Check is user parameter is invalid
+            if (user == null)
+            {
+                answer = ":x: Вы не указали соперника";
+                return false;
+            }
+            else if (user.Id == author.Id)
+            {
+                answer = ":x: Вы не можете начать битву с собой";
+                return false;
+            }
+            else if (user.Id == 822717022374068224)
+            {
+                answer = ":x: Вы не можете начать битву с ботом";
+                return false;
+            }
+            // Check if its a versus channel
+            else if (context_id != channel_id)
+            {
+                answer = "Бросать вызов в другом месте! Вам нужно в трактир - <#823844887787077682>";
+                return false;
+            }
+            return true;
+        }
+
+        // SQL Module
+
+        static void ExecuteSQL(string cmd)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
@@ -58,6 +93,28 @@ namespace Bot.Modules
             return false;
         }
 
+        static bool AlreadyInBattle(string id)
+        {
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                string sqlExpression = "SELECT discord_id FROM duel";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(id))
+                                return true;
+
+                        }
+                }
+            }
+            return false;
+        }
+
         static object GetFieldSQL(string field, ulong id, string sqlExpression)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
@@ -84,6 +141,29 @@ namespace Bot.Modules
                 }
             }
             return null;
+        }
+
+        // SQL Module ends
+
+        private Archetype CreateClass(string type, SocketGuildUser guildUser)
+        {
+            switch (type)
+            {
+                case ("Acolyte"):
+                    Acolyte acolyte = new Acolyte(guildUser.Username, guildUser.Id);
+                    return acolyte;
+                case ("Komtur"):
+                    Komtur komtur = new Komtur(guildUser.Username, guildUser.Id);
+                    return komtur;
+                case ("Thrower"):
+                    Thrower thrower = new Thrower(guildUser.Username, guildUser.Id);
+                    return thrower;
+                case ("Alchemist"):
+                    Alchemist alchemist = new Alchemist(guildUser.Username, guildUser.Id);
+                    return alchemist;
+                default:
+                    return null;
+            }
         }
 
         [Command("create")]
@@ -260,41 +340,31 @@ namespace Bot.Modules
         [Alias("versus", "fight", "vs", "destroy")]
         public async Task Challenge(SocketGuildUser user = null)
         {
-            SocketUser messageAuthor = Context.Message.Author;
-            SocketGuildUser author = (messageAuthor as SocketGuildUser);
+            // Create SocketGuildUser objects
+            SocketGuildUser author = (Context.Message.Author as SocketGuildUser);
 
-            // Check is user parameter is invalid
-            if (user == null)
-            {
-                await ReplyAsync(":x: Вы не указали соперника");
-                return;
-            } 
-            else if (user != Context.Message.Author)
-            {
-                await ReplyAsync(":x: Вы не можете начать битву с собой");
-                return;
-            } 
-            else if (user.Id == 822717022374068224)
-            {
-                await ReplyAsync(":x: Вы не можете начать битву с ботом");
-                return;
-            }
-
-            // Check if its a versus channel
-            if (Context.Channel.Id != 823844887787077682)
-            {
-                await ReplyAsync("Бросать вызов в другом месте! Вам нужно в трактир - <#823844887787077682>");
-                return;
-            }
-                
-
-            string authorname, username;
-            authorname = Context.Message.Author.Username;
-            username = user.Username;
+            ulong context_id = Context.Channel.Id;
+            ulong channel_id = 823844887787077682;
+            string answer = "";
             
+            if (!ValidChecker(user, author, ref answer, channel_id, context_id))
+            {
+                await ReplyAsync(answer);
+                return;
+            }
+
+            
+
             //
             // Get everyone role, create new role, create permissions, set roles
             //
+
+            // Create user name and author name
+            string authorname, username;
+            authorname = Context.Message.Author.Username;
+            username = user.Username;
+
+            
 
             // Create Roles
             IRole everyone = Context.Guild.EveryoneRole;
@@ -330,22 +400,40 @@ namespace Bot.Modules
             await userchannel.AddPermissionOverwriteAsync(secondplayer, noView);
             await userchannel.ModifyAsync(x => x.CategoryId = category.Id);
 
+            // 
+            // Fight category
+            //
+
+            // Start message
             FightHandler fightHandler = new FightHandler();
             await fightHandler.StartMessage(author, user, userchannel, authorchannel);
 
-            
-            Acolyte acolyte = new Acolyte(authorname, author.Id);
-            Thrower thrower = new Thrower(username, user.Id);
-
-            while (true)
+            // Creating objects
+            string type1, type2;
+            type1 = Convert.ToString(GetFieldSQL("type", author.Id, "SELECT * FROM users"));
+            type2 = Convert.ToString(GetFieldSQL("type", user.Id, "SELECT * FROM users"));
+            Archetype player1 = CreateClass(type1, author);
+            Archetype player2 = CreateClass(type2, user);
+            ExecuteSQL($"INSERT INTO versus VALUES ({authorname}-vs-{username}, {authorname}, {username}, {author.Id}, {user.Id}, {authorchannel.Id}, {userchannel.Id}, null, null, {player1.Health}, {player2.Health})");
+            // If created successfully
+            if (player1 == null)
             {
-                
-                await fightHandler.FightMessage(author, user, acolyte, thrower, authorchannel, userchannel);
+                await ReplyAsync("Ошибка при создании первого игрока");
+                return;
+            } 
+            else if (player2 == null)
+            {
+                await ReplyAsync("Ошибка при создании второго игрока");
+                return;
             }
 
+            await fightHandler.FightLoop(author, user, player1, player2, authorchannel, userchannel);
+            }
 
+        [Command("attack")]
+        public async Task Attack()
+        {
+                       
         }
-    
-        
     }
 }

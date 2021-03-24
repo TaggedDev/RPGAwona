@@ -68,8 +68,9 @@ namespace Bot
                 })
                 .UseConsoleLifetime();
 
-            //ExecuteSQL("DROP TABLE users");
+            ExecuteSQL("DROP TABLE duel");
             ExecuteSQL("CREATE TABLE IF NOT EXISTS users (discord_id INTEGER NOT NULL UNIQUE, level INTEGER NOT NULL, archetype VARCHAR(100) NOT NULL, type VARCHAR(100) NOT NULL, weapon INTEGER, hat INTEGER, body INTEGER, legs INTEGER, boots INTEGER, gloves INTEGER)");
+            ExecuteSQL("CREATE TABLE IF NOT EXISTS duel (categoryname VARCHAR(100), player1name VARCHAR(100), player2name VARCHAR(100), player1id INTEGER NOT NULL UNIQUE, player2id INTEGER NOT NULL UNIQUE, channel1id INTEGER NOT NULL, channel2id INTEGER NOT NULL, player1move VARCHAR(100), player2move VARHCAR(100), player1health INTEGER, player2health INTEGER)");
             //ExecuteSQL("CREATE TABLE IF NOT EXISTS inventory (discord_id INTEGER, level INTEGER, archetype VARCHAR(100), type VARCHAR(100), weapon INTEGER, hat INTEGER, body INTEGER, legs INTEGER, boots INTEGER, gloves INTEGER)");
             
 

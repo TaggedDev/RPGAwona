@@ -7,9 +7,9 @@ namespace Bot.Types
     class Acolyte : Archetype
     {
         /*public override string name { get => _name; set => _name = value; } // Username#0000
-        public override ulong id { get => _id; set => _id = value; } // discord id 
-        public override string race { get => _race; set => _race = value; } // current race 
-        public override int health { get => _health; set => _health = value; } // health point
+        public override ulong id { get => _id; set => _id = value; } // discord id */
+        //public override string Race { get => _race; set => _race = value; } // current race 
+        /*public override int health { get => _health; set => _health = value; } // health point
         public override int lvl { get => _lvl; set => _lvl = value; }
         public override int defence { get => _defence; set => _defence = value; } // health point
         public override int damage { get => _damage; set => _damage = value; } // damage parameter
@@ -37,5 +37,42 @@ namespace Bot.Types
             _dodge = 0.05f;
         }
 
+        public override int Attack(Archetype enemy)
+        {
+            int damage, enemyDefence;
+            float critChance;
+
+            Random rnd = new Random();
+            
+            damage = Damage;
+            enemyDefence = enemy.Defence;
+            critChance = Luck;
+            
+            if (critChance > rnd.Next(0, 100))
+                damage *= Convert.ToInt32(Math.Floor(Multiplier));
+
+            int result = damage - Convert.ToInt32(Math.Floor(Defence * .14f));
+            return result;
+        }
+
+        public override int Shield()
+        {
+            return 0;
+        }
+
+        public override int Parry()
+        {
+            return 0;
+        }
+
+        public override int Sleep()
+        {
+            return 0;
+        }
+
+        public override void Action()
+        {
+            return;
+        }
     }
 }
