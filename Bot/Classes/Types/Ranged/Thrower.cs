@@ -26,20 +26,6 @@ namespace Bot.Types.Ranged
             _dodge = 0.17f;
         }
 
-        public override int Attack()
-        {
-            return 0;
-        }
-
-        public override int Shield()
-        {
-            return 0;
-        }
-
-        public override int Parry()
-        {
-            return 0;
-        }
 
     }
 }
