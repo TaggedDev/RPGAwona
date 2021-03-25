@@ -26,21 +26,22 @@ namespace Bot.Modules
 
         static bool ValidChecker(SocketGuildUser user, SocketGuildUser author, ref string answer, ulong channel_id, ulong context_id)
         {
-            // If player is already in Battle
-            if (AlreadyInBattle(Convert.ToString(author.Id)) || AlreadyInBattle(Convert.ToString(user.Id)))
-            {
-                answer = "Один из игроков уже находится в бою, подождите и попробуйте снова";
-                return false;
-            }
+            
             // Check is user parameter is invalid
             if (user == null)
             {
                 answer = ":x: Вы не указали соперника";
                 return false;
             }
-            else if (user.Id == author.Id)
+            else if (user.Id != author.Id)
             {
                 answer = ":x: Вы не можете начать битву с собой";
+                return false;
+            }
+            // If player is already in Battle
+            if (AlreadyInBattle(Convert.ToString(author.Id)) || AlreadyInBattle(Convert.ToString(user.Id)))
+            {
+                answer = "Один из игроков уже находится в бою, подождите и попробуйте снова";
                 return false;
             }
             else if (user.Id == 822717022374068224)
@@ -58,7 +59,6 @@ namespace Bot.Modules
         }
 
         // SQL Module
-
         static void ExecuteSQL(string cmd)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
@@ -69,7 +69,7 @@ namespace Bot.Modules
                 command.CommandText = cmd;
                 command.ExecuteNonQuery();
             }
-        }
+        }    
 
         static bool AlreadyCreated(string id)
         {
@@ -98,8 +98,21 @@ namespace Bot.Modules
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
                 connection.Open();
-                string sqlExpression = "SELECT discord_id FROM duel";
+                string sqlExpression = "SELECT player1id FROM duel";
                 SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(id))
+                                return true;
+
+                        }
+                }
+                sqlExpression = "SELECT player2id FROM duel";
+                command = new SqliteCommand(sqlExpression, connection);
                 using (SqliteDataReader reader = command.ExecuteReader())
                 {
                     if (reader.HasRows) // если есть данные
@@ -137,6 +150,27 @@ namespace Bot.Modules
                                 else if (field.Equals("type"))
                                     return reader["type"];
                             }
+                        }
+                }
+            }
+            return null;
+        }
+
+        static object GetFieldSQL(ulong id, string field, string table)
+        {
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                string sqlExpression = $"SELECT * FROM {table}";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(Convert.ToString(id)))
+                                return reader[field];
                         }
                 }
             }
@@ -259,50 +293,13 @@ namespace Bot.Modules
             name = Context.User.Username + "#" + Context.User.Discriminator;
             discord_id = Context.User.Id;
 
-            Console.WriteLine(type);
+            Archetype character = CreateClass(type, Context.User as SocketGuildUser);
+            damage = character.Damage;
+            health = character.Health;
+            armor = character.Defence;
+            luck = character.Luck;
+            agility = character.Dodge;
 
-            switch (type)
-            {
-                case ("Acolyte"):
-                    Acolyte acolyte = new Acolyte(name, discord_id);
-                    damage = acolyte.Damage;
-                    health = acolyte.Health;
-                    armor = acolyte.Defence;
-                    luck = acolyte.Luck;
-                    agility = acolyte.Dodge;
-                    break;
-                case ("Komtur"):
-                    Komtur komtur = new Komtur(name, discord_id);
-                    damage = komtur.Damage;
-                    health = komtur.Health;
-                    armor = komtur.Defence;
-                    luck = komtur.Luck;
-                    agility = komtur.Dodge;
-                    break;
-                case ("Thrower"):
-                    Thrower thrower = new Thrower(name, discord_id);
-                    damage = thrower.Damage;
-                    health = thrower.Health;
-                    armor = thrower.Defence;
-                    luck = thrower.Luck;
-                    agility = thrower.Dodge;
-                    break;
-                case ("Alchemist"):
-                    Alchemist alchemist = new Alchemist(name, discord_id);
-                    damage = alchemist.Damage;
-                    health = alchemist.Health;
-                    armor = alchemist.Defence;
-                    luck = alchemist.Luck;
-                    agility = alchemist.Dodge;
-                    break;
-                default:
-                    damage = 0;
-                    health = 0;
-                    armor = 0;
-                    luck = 0;
-                    agility = 0;
-                    break;
-            }
 
             var builder = new EmbedBuilder()
                 .WithTitle($"{name}")
@@ -352,9 +349,6 @@ namespace Bot.Modules
                 await ReplyAsync(answer);
                 return;
             }
-
-            
-
             //
             // Get everyone role, create new role, create permissions, set roles
             //
@@ -363,9 +357,6 @@ namespace Bot.Modules
             string authorname, username;
             authorname = Context.Message.Author.Username;
             username = user.Username;
-
-            
-
             // Create Roles
             IRole everyone = Context.Guild.EveryoneRole;
             IRole publicrole = await Context.Guild.CreateRoleAsync($"{authorname}-vs-{username}", null, new Color(0xf5fffa), false, null);
@@ -414,7 +405,7 @@ namespace Bot.Modules
             type2 = Convert.ToString(GetFieldSQL("type", user.Id, "SELECT * FROM users"));
             Archetype player1 = CreateClass(type1, author);
             Archetype player2 = CreateClass(type2, user);
-            ExecuteSQL($"INSERT INTO versus VALUES ({authorname}-vs-{username}, {authorname}, {username}, {author.Id}, {user.Id}, {authorchannel.Id}, {userchannel.Id}, null, null, {player1.Health}, {player2.Health})");
+            ExecuteSQL($"INSERT INTO duel VALUES (\"{authorname}-vs-{username}\", \"{authorname}\", \"{username}\", {author.Id}, {user.Id}, {authorchannel.Id}, {userchannel.Id}, \"Sleep\", \"Sleep\", {player1.Health}, {player2.Health})");
             // If created successfully
             if (player1 == null)
             {
@@ -433,7 +424,26 @@ namespace Bot.Modules
         [Command("attack")]
         public async Task Attack()
         {
-                       
+            // If player is already in a battle
+            if (false)
+                return;
+            // If user is not typing in his channel
+            if (false)
+                return;
+
+            ulong userid;
+            userid = Context.User.Id;
+
+            ulong p1id, p2id;
+            p1id = Convert.ToUInt64(GetFieldSQL(Context.User.Id, "player1id", "duel"));
+            p2id = Convert.ToUInt64(GetFieldSQL(Context.User.Id, "player2id", "duel"));
+
+            if (p1id == userid)
+                ExecuteSQL($"UPDATE duel SET player1move = \"Attack\" WHERE player1id = {userid}");
+            else if (p2id == userid)
+                ExecuteSQL($"UPDATE duel SET player2move = \"Attack\" WHERE player2id = {userid}");
+            else
+                await ReplyAsync("Ошибка");
         }
     }
 }
