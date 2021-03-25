@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,6 +16,7 @@ namespace Bot.Types
         protected int _damage; // damage parameter
         protected float _luck; // luck parameter
         protected float _multiplier; // luck multiplier
+        protected float _protection;
         protected float _dodge; // dodge chance
         protected string _move; // player's choose
 
@@ -27,61 +29,137 @@ namespace Bot.Types
         public virtual int Damage { get => _damage; set => _damage = value; } // damage parameter
         public virtual float Luck { get => _luck; set => _luck = value; } // luck parameter
         public virtual float Multiplier { get => _multiplier; set => _multiplier = value; } // luck multiplier
+        public virtual float Protection { get => _protection; set => _protection = value; } // luck multiplier
         public virtual float Dodge { get => _dodge; set => _dodge = value; } // dodge chance
         public virtual string Move { get => _move; set => _move = value; } // player's choose
 
-        abstract public int Attack(Archetype enemy);
-        abstract public int Shield();
-        abstract public int Parry();
-        abstract public int Sleep();
-        abstract public void Action();
-
-        /*abstract public bool IsCrit(float chance)
+        public void ExecuteSQL(string cmd)
         {
-            Random rnd = new Random();
-            double result = rnd.NextDouble();
-            if (result <= chance)
-                return true;
-            return false;
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                SqliteCommand command = new SqliteCommand();
+                command.Connection = connection;
+                command.CommandText = cmd;
+                command.ExecuteNonQuery();
+            }
         }
-        abstract public int Attack(Archetype attackerCharacter, Archetype defenderCharacter)
+
+        public object GetFieldSQL(ulong id, string field, string table)
         {
-            float attackerMultiplier, attackerCritChance;
-            int attackerDamage, defenderArmor;
-            string defenderMove;
-
-            defenderMove = defenderCharacter._move;
-            defenderArmor = defenderCharacter._defence;
-            attackerDamage = attackerCharacter._damage;
-            attackerMultiplier = attackerCharacter._multiplier;
-            attackerCritChance = attackerCharacter._luck;
-
-            if (defenderMove.Equals("attack") || defenderMove.Equals("stun"))
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
-                if (IsCrit(attackerCritChance))
+                connection.Open();
+                string sqlExpression = $"SELECT * FROM {table}";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
                 {
-                    int damage;
-                    damage = Convert.ToInt32(attackerDamage * attackerMultiplier);
-                    return damage;
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(Convert.ToString(id)))
+                                return reader[field];
+                        }
                 }
-                return attackerDamage - Convert.ToInt32(defenderArmor * .2f);
             }
-            else if (defenderMove.Equals("parry"))
+            return null;
+        }
+
+        public virtual int Attack(Archetype enemy)
+        {
+            int damage, enemyDefence;
+            float critChance;
+
+            Random rnd = new Random();
+            double rand = rnd.NextDouble();
+
+            damage = Damage;
+            enemyDefence = enemy.Defence;
+            critChance = Luck;
+
+            if (critChance > rand)
+                damage *= Convert.ToInt32(Math.Floor(Multiplier));
+
+            int result = damage - Convert.ToInt32(Math.Floor(enemyDefence * .15f));
+            return result;
+        }
+
+        public virtual int Shield(int damage, Archetype enemy)
+        {
+            float enemyProtection = enemy.Protection;
+            ulong p1id, p2id;
+
+            p1id = Convert.ToUInt64(GetFieldSQL(Id, "id", "duel"));
+            p2id = Convert.ToUInt64(GetFieldSQL(enemy.Id, "id", "duel"));
+            int attack = Convert.ToInt32(Math.Floor(damage - damage * enemyProtection));
+
+            if (enemy.Id == p1id)
+                ExecuteSQL($"UPDATE duel SET player2health = {attack}");
+            else if (enemy.Id == p2id)
+                ExecuteSQL($"UPDATE duel SET player1health = {attack}");
+
+            return 0;
+        }
+
+        public virtual int Parry(int damage, Archetype enemy)
+        {
+            string enemyAction;
+            int playerHealth, attack;
+            float critChance;
+            ulong p1id, p2id;
+            Random rnd = new Random();
+            double rand = rnd.NextDouble();
+
+            critChance = Luck / 1.27f;
+
+            playerHealth = Health;
+            playerHealth -= Convert.ToInt32(Math.Floor(damage * 0.65));
+
+            attack = damage;
+
+            if (critChance > rand)
+                attack *= Convert.ToInt32(Math.Floor(Multiplier));
+
+            p1id = Convert.ToUInt64(GetFieldSQL(Id, "id", "duel"));
+            p2id = Convert.ToUInt64(GetFieldSQL(enemy.Id, "id", "duel"));
+
+            // !!! IMPORTANT !!!
+            enemyAction = "attack";
+            if (enemyAction.Equals("attack"))
             {
-                attackerCharacter._health -= Convert.ToInt32(attackerDamage * 0.6f);
-                return 0;
+                int enemyHealth = enemy.Health - attack;
+                // Depends on what player is attacking, take % of enemy damage in
+                if (enemy.Id == p1id)
+                    ExecuteSQL($"UPDATE duel SET player2health = {enemyHealth}");
+                else if (enemy.Id == p2id)
+                    ExecuteSQL($"UPDATE duel SET player1health = {enemyHealth}");
+                // But anyway return the damage that author would do to enemy
+                return attack;
             }
-            else if (defenderMove.Equals("defence"))
-            {
-                int hit = Convert.ToInt32(attackerDamage * .2f) - Convert.ToInt32(defenderArmor * .3f);
-                attackerCharacter._move = "stun";
-                if (hit >= 0)
-                    return hit;
-                else
-                    return 0;
-            }
+            // If enemy action is not attack return 0 because parry works so
+            return 0;
+        }
+
+        public virtual int Sleep()
+        {
+            return 0;
+        }
+
+        public virtual int Action(string action, Archetype enemy)
+        {
+            int damage, res;
+            damage = Damage;
+            if (action.Equals("Defense"))
+                res = Shield(damage, enemy);
+            else if (action.Equals("Parry"))
+                res = Parry(damage, enemy);
+            else if (action.Equals("Attack"))
+                res = Attack(enemy);
             else
-                return -1;
-        }*/
+                res = Sleep();
+
+            return res;
+        }
     }
 }
