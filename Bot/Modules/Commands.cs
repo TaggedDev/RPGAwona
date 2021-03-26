@@ -93,6 +93,49 @@ namespace Bot.Modules
             return false;
         }
 
+        static bool AlreadyInBattle(string id, bool factor)
+        {
+            string field; // "player1id"
+            if (factor)
+                field = "player1id";
+            else
+                field = "player2id";
+
+
+
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                string sqlExpression = $"SELECT {field} FROM duel";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(id))
+                                return true;
+
+                        }
+                }
+                sqlExpression = "SELECT player2id FROM duel";
+                command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId = Convert.ToString(reader.GetValue(0));
+                            if (getId.Equals(id))
+                                return true;
+
+                        }
+                }
+            }
+            return false;
+        }
+
         static bool AlreadyInBattle(string id)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
@@ -143,12 +186,7 @@ namespace Bot.Modules
                             string getId = Convert.ToString(reader.GetValue(0));
                             if (getId.Equals(Convert.ToString(id)))
                             {
-                                if (field.Equals("level"))
-                                    return reader["level"];
-                                else if (field.Equals("archetype"))
-                                    return reader["archetype"];
-                                else if (field.Equals("type"))
-                                    return reader["type"];
+                                return reader[field];
                             }
                         }
                 }
@@ -156,26 +194,33 @@ namespace Bot.Modules
             return null;
         }
 
-        static object GetFieldSQL(ulong id, string field, string table)
+        static object GetIDSQL(string id, bool factor)
         {
+            string field;
+            if (factor)
+                field = "player1id";
+            else
+                field = "player2id";
+
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
                 connection.Open();
-                string sqlExpression = $"SELECT * FROM {table}";
+                string sqlExpression = $"SELECT * FROM duel";
                 SqliteCommand command = new SqliteCommand(sqlExpression, connection);
                 using (SqliteDataReader reader = command.ExecuteReader())
                 {
                     if (reader.HasRows) // если есть данные
                         while (reader.Read())   // построчно считываем данные
                         {
-                            string getId = Convert.ToString(reader.GetValue(0));
-                            if (getId.Equals(Convert.ToString(id)))
+                            string getId = Convert.ToString(reader[field]);
+                            if (getId.Equals(id))
                                 return reader[field];
                         }
                 }
             }
             return null;
         }
+
 
         // SQL Module ends
 
@@ -418,32 +463,50 @@ namespace Bot.Modules
                 return;
             }
 
-            await fightHandler.FightLoop(author, user, player1, player2, authorchannel, userchannel);
+            fightHandler.FightLoop(author, user, player1, player2, authorchannel, userchannel);
             }
 
         [Command("attack")]
         public async Task Attack()
         {
+            string userid;
+            userid = Convert.ToString(Context.User.Id);
+
+            string channel1id = Convert.ToString(GetFieldSQL("channel1id", Convert.ToUInt64(userid), "SELECT * FROM duel"));
+            string channel2id = Convert.ToString(GetFieldSQL("channel2id", Convert.ToUInt64(userid), "SELECT * FROM duel"));
+
             // If player is already in a battle
-            if (false)
+            if (AlreadyInBattle(userid, true) || AlreadyInBattle(userid, false))
                 return;
             // If user is not typing in his channel
-            if (false)
+            if (!channel1id.Equals(Context.Channel.Id) || !(channel2id.Equals(Context.Channel.Id)))
                 return;
 
-            ulong userid;
-            userid = Context.User.Id;
+            string p1id, p2id;
+            p1id = Convert.ToString(GetIDSQL(userid, true)); // get 1st player id
+            p2id = Convert.ToString(GetIDSQL(userid, false)); // get 2nd player id
+            Console.WriteLine($"1: @{p1id};;; 2: @{p2id}");
 
-            ulong p1id, p2id;
-            p1id = Convert.ToUInt64(GetFieldSQL(Context.User.Id, "player1id", "duel"));
-            p2id = Convert.ToUInt64(GetFieldSQL(Context.User.Id, "player2id", "duel"));
-
-            if (p1id == userid)
-                ExecuteSQL($"UPDATE duel SET player1move = \"Attack\" WHERE player1id = {userid}");
-            else if (p2id == userid)
-                ExecuteSQL($"UPDATE duel SET player2move = \"Attack\" WHERE player2id = {userid}");
+            if (p1id.Equals(userid)) 
+            {
+                ExecuteSQL($"UPDATE duel SET player1move = 'Attack' WHERE player1id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **атака**");
+            }
+            else if (p2id.Equals(userid))
+            { 
+                ExecuteSQL($"UPDATE duel SET player2move = 'Attack' WHERE player2id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **атака**");
+            }
             else
                 await ReplyAsync("Ошибка");
+        }
+
+        [Command("surrender")]
+        public async Task Surrender()
+        {
+            string userid;
+            userid = Convert.ToString(Context.User.Id);
+            ExecuteSQL($"UPDATE duel SET player1health = 0 WHERE player1id = {userid}");
         }
     }
 }
