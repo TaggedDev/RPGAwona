@@ -148,25 +148,14 @@ namespace Bot.Modules
                     .ConfigureAwait(false);
         }
 
-        public async void prikol(int time = 10)
-        {
-            while (time > 0)
-            {
-                //await msg1.ModifyAsync(m => m.Content = $"Осталось {time} секунд");
-                Console.WriteLine(time);
-                Thread.Sleep(1000);
-                time--;
-            }
-        }
-
-        public async Task FightLoop(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ITextChannel textChannel1, ITextChannel textChannel2)
+        public async Task FightLoop(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ICategoryChannel category, ITextChannel textChannel1, ITextChannel textChannel2, IRole publicrole, IRole firstplayer, IRole secondplayer)
         {
             int health1, health2;
             health1 = 1;
             health2 = 1;
             bool surrender = false;
             await Task.Delay(3 * 1000);
-            while (health1 > 0 & health2 > 0 & surrender != true)
+            while (health1 > 0 && health2 > 0 && surrender != true)
             {
                 health1 = GetHealthSQL(user1.Id, true);
                 health2 = GetHealthSQL(user2.Id, false);
@@ -174,16 +163,21 @@ namespace Bot.Modules
                 byte time = 10;
                 await FightMessage(user1, user2, player1, player2, textChannel1, textChannel2);
                 var msg1 = await textChannel1.SendMessageAsync($"Осталось {time} секунд");
-                
-                prikol(); // :)
 
-                //await msg1.Channel.DeleteMessageAsync(1);
+                while (time > 0)
+                {
+                    //await msg1.ModifyAsync(m => m.Content = $"Осталось {time} секунд");
+                    Thread.Sleep(1000);
+                    time--;
+                }
+
+                await msg1.DeleteAsync();
 
                 // Get player1move and player2move from SQL table `duel`
                 string player1move, player2move;
                 player1move = Convert.ToString(GetFieldSQL(user1.Id, "player1move", "duel")); 
                 player2move = Convert.ToString(GetFieldSQL(user2.Id, "player2move", "duel"));
-
+                Console.WriteLine($"{player1move}!{player2move}");
                 int player1damage, player2damage;
                 player1damage = player1.Action(player1move, player2);
                 player2damage = player2.Action(player2move, player1);
@@ -194,6 +188,12 @@ namespace Bot.Modules
             }
 
             ExecuteSQL($"DELETE FROM duel WHERE player1id = {player1.Id}");
+            textChannel1.DeleteAsync();
+            textChannel2.DeleteAsync();
+            category.DeleteAsync();
+            publicrole.DeleteAsync();
+            firstplayer.DeleteAsync();
+            secondplayer.DeleteAsync();
 
         }
 

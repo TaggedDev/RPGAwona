@@ -221,6 +221,33 @@ namespace Bot.Modules
             return null;
         }
 
+        static object GetChannelIDSQL(string id, bool factor)
+        {
+            string field;
+            if (factor)
+                field = "channel1id";
+            else
+                field = "channel2id";
+
+            using (var connection = new SqliteConnection("Data Source=awona.db"))
+            {
+                connection.Open();
+                string sqlExpression = $"SELECT * FROM duel";
+                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
+                using (SqliteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows) // если есть данные
+                        while (reader.Read())   // построчно считываем данные
+                        {
+                            string getId1 = Convert.ToString(reader["player1id"]);
+                            string getId2 = Convert.ToString(reader["player2id"]);
+                            if (getId1.Equals(id) || getId2.Equals(id))
+                                return reader[field];
+                        }
+                }
+            }
+            return null;
+        }
 
         // SQL Module ends
 
@@ -463,8 +490,10 @@ namespace Bot.Modules
                 return;
             }
 
-            fightHandler.FightLoop(author, user, player1, player2, authorchannel, userchannel);
-            }
+            fightHandler.FightLoop(author, user, player1, player2, category, authorchannel, userchannel, publicrole, firstplayer, secondplayer);
+
+            
+        }
 
         [Command("attack")]
         public async Task Attack()
@@ -472,20 +501,23 @@ namespace Bot.Modules
             string userid;
             userid = Convert.ToString(Context.User.Id);
 
-            string channel1id = Convert.ToString(GetFieldSQL("channel1id", Convert.ToUInt64(userid), "SELECT * FROM duel"));
-            string channel2id = Convert.ToString(GetFieldSQL("channel2id", Convert.ToUInt64(userid), "SELECT * FROM duel"));
+            string channel1id = Convert.ToString(GetChannelIDSQL(userid, true));
+            string channel2id = Convert.ToString(GetChannelIDSQL(userid, false)); ;
 
+            Console.WriteLine($"1: {channel1id} 2: {channel2id} ID: {Context.Channel.Id}");
+            Console.WriteLine($"{AlreadyInBattle(userid, true) || AlreadyInBattle(userid, false)}");
+            //Console.WriteLine($"{!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id)))}");
             // If player is already in a battle
-            if (AlreadyInBattle(userid, true) || AlreadyInBattle(userid, false))
+
+            if (!(AlreadyInBattle(userid, true) || AlreadyInBattle(userid, false)))
                 return;
             // If user is not typing in his channel
-            if (!channel1id.Equals(Context.Channel.Id) || !(channel2id.Equals(Context.Channel.Id)))
-                return;
+            /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
+                return;*/
 
             string p1id, p2id;
             p1id = Convert.ToString(GetIDSQL(userid, true)); // get 1st player id
             p2id = Convert.ToString(GetIDSQL(userid, false)); // get 2nd player id
-            Console.WriteLine($"1: @{p1id};;; 2: @{p2id}");
 
             if (p1id.Equals(userid)) 
             {
