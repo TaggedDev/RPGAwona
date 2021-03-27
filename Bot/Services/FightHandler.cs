@@ -17,7 +17,7 @@ using System.Threading;
 
 namespace Bot.Modules 
 {
-    class FightHandler : ModuleBase<SocketCommandContext>
+    class FightHandler
     {
         public string ConvertType(string type)
         {
@@ -36,67 +36,7 @@ namespace Bot.Modules
             }
         }
 
-        static void ExecuteSQL(string cmd)
-        {
-            using (var connection = new SqliteConnection("Data Source=awona.db"))
-            {
-                connection.Open();
-                SqliteCommand command = new SqliteCommand();
-                command.Connection = connection;
-                command.CommandText = cmd;
-                command.ExecuteNonQuery();
-            }
-        }
-
-        static object GetFieldSQL(ulong id, string field, string table)
-        {
-            using (var connection = new SqliteConnection("Data Source=awona.db"))
-            {
-                connection.Open();
-                string sqlExpression = $"SELECT * FROM {table}";
-                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
-                using (SqliteDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.HasRows) // если есть данные
-                        while (reader.Read())   // построчно считываем данные
-                        {
-                            string getId = Convert.ToString(reader.GetValue(0));
-                            if (getId.Equals(Convert.ToString(id)))
-                                return reader[field];
-                        }
-                }
-            }
-            return null;
-        }
-
-        static int GetHealthSQL(ulong id, bool factor)
-        {
-            using (var connection = new SqliteConnection("Data Source=awona.db"))
-            {
-                connection.Open();
-                string sqlExpression = $"SELECT * FROM duel";
-                SqliteCommand command = new SqliteCommand(sqlExpression, connection);
-                using (SqliteDataReader reader = command.ExecuteReader())
-                {
-
-                    if (reader.HasRows) // если есть данные
-                        while (reader.Read())   // построчно считываем данные
-                        {
-                            string getId;
-                            if (factor)
-                                getId = Convert.ToString(reader["player1id"]);
-                            else
-                                getId = Convert.ToString(reader["player2id"]);
-                            
-                            if (getId.Equals(Convert.ToString(id)) && factor)
-                                return Convert.ToInt32(reader["player1health"]);
-                            else if (getId.Equals(Convert.ToString(id)) && !factor)
-                                return Convert.ToInt32(reader["player2health"]);
-                        }
-                }
-            }
-            return 0;
-        }
+        static Provider provider = new Provider();
 
         public async Task StartMessage(SocketGuildUser user1, SocketGuildUser user2, ITextChannel textChannel1, ITextChannel textChannel2)
         {
@@ -107,8 +47,8 @@ namespace Bot.Modules
 
             // Get characters' types for embed
             string type1, type2;
-            type1 = Convert.ToString(GetFieldSQL(user1.Id, "type", "users"));
-            type2 = Convert.ToString(GetFieldSQL(user2.Id, "type", "users"));
+            type1 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(user1.Id), "discord_id","users"));
+            type2 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(user2.Id), "discord_id", "users"));
 
             // Translate in russian
             type1 = ConvertType(type1);
@@ -116,8 +56,8 @@ namespace Bot.Modules
 
             // Get characters' levels for embed
             int level1, level2;
-            level1 = Convert.ToInt32(GetFieldSQL(user1.Id, "level", "users"));
-            level2 = Convert.ToInt32(GetFieldSQL(user2.Id, "level", "users"));
+            level1 = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(user1.Id), "discord_id", "users"));
+            level2 = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(user2.Id), "discord_id", "users"));
 
             // Generate embed
             var builder = new EmbedBuilder()
@@ -153,16 +93,19 @@ namespace Bot.Modules
             int health1, health2;
             health1 = 1;
             health2 = 1;
-            bool surrender = false;
+            bool surrender1, surrender2;
+            surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
+            surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
             await Task.Delay(3 * 1000);
-            while (health1 > 0 && health2 > 0 && surrender != true)
+            while (health1 > 0 && health2 > 0 && !surrender1 && !surrender2)
             {
-                health1 = GetHealthSQL(user1.Id, true);
-                health2 = GetHealthSQL(user2.Id, false);
+
+                health1 = provider.GetDuelHealthAwona(user1.Id, true);
+                health2 = provider.GetDuelHealthAwona(user2.Id, false);
 
                 byte time = 10;
                 await FightMessage(user1, user2, player1, player2, textChannel1, textChannel2);
-                var msg1 = await textChannel1.SendMessageAsync($"Осталось {time} секунд");
+                var msg1 = await textChannel1.SendMessageAsync($"У вас {time} секунд");
 
                 while (time > 0)
                 {
@@ -175,19 +118,26 @@ namespace Bot.Modules
 
                 // Get player1move and player2move from SQL table `duel`
                 string player1move, player2move;
-                player1move = Convert.ToString(GetFieldSQL(user1.Id, "player1move", "duel")); 
-                player2move = Convert.ToString(GetFieldSQL(user2.Id, "player2move", "duel"));
-                Console.WriteLine($"{player1move}!{player2move}");
+                player1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel")); 
+                player2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
+                Console.WriteLine($"{user1.Id}!{user2.Id}");
                 int player1damage, player2damage;
                 player1damage = player1.Action(player1move, player2);
                 player2damage = player2.Action(player2move, player1);
 
-                ExecuteSQL($"UPDATE duel SET player1health = {health1 - player2damage} WHERE player1id = {player1.Id}");
-                ExecuteSQL($"UPDATE duel SET player2health = {health2 - player1damage} WHERE player2id = {player2.Id}");
+                string player1id = Convert.ToString(user1.Id), player2id = Convert.ToString(user2.Id);
 
+                provider.ExecuteSQL($"UPDATE duel SET player1health = {health1 - player2damage} WHERE player1id = {player1id}");
+                provider.ExecuteSQL($"UPDATE duel SET player2health = {health2 - player1damage} WHERE player2id = {player2id}");
+
+                //provider.ExecuteSQL($"UPDATE duel SET player1move = Sleep WHERE player1id = {player1id}");
+                //provider.ExecuteSQL($"UPDATE duel SET player2move = Sleep WHERE player2id = {player2id}");
+
+                surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
+                surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
             }
 
-            ExecuteSQL($"DELETE FROM duel WHERE player1id = {player1.Id}");
+            provider.ExecuteSQL($"DELETE FROM duel WHERE player1id = {user1.Id}");
             textChannel1.DeleteAsync();
             textChannel2.DeleteAsync();
             category.DeleteAsync();
@@ -206,12 +156,12 @@ namespace Bot.Modules
 
             // Get characters' levels for embed
             int level1, level2, health1, health2;
-            level1 = Convert.ToInt32(GetFieldSQL(user1.Id, "level", "users"));
-            level2 = Convert.ToInt32(GetFieldSQL(user2.Id, "level", "users"));
+            level1 = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(user1.Id), "discord_id", "users"));
+            level2 = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(user2.Id), "discord_id", "users"));
 
-            health1 = GetHealthSQL(user1.Id, true);
-            health2 = GetHealthSQL(user2.Id, false);
-            Console.WriteLine($"{health1}, !@#$ {health2}");
+            health1 = provider.GetDuelHealthAwona(user1.Id, true);
+            health2 = provider.GetDuelHealthAwona(user2.Id, false);
+
             var builder = new EmbedBuilder()
                 .WithTitle($"Битва между {user1name} и {user2name}")
                 .WithDescription($"") // Last move
