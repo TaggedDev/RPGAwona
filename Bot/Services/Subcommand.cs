@@ -23,7 +23,7 @@ namespace Bot.Services
                 answer = ":x: Вы не указали соперника";
                 return false;
             }
-            else if (user.Id != author.Id)
+            else if (user.Id == author.Id)
             {
                 answer = ":x: Вы не можете начать битву с собой";
                 return false;
