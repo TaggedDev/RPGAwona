@@ -20,7 +20,7 @@ namespace Bot.Types
             _name = name;
             _id = id;
             _health = 250;
-            _protection = 40;
+            _protection = .4f;
             _multiplier = 1.45f;
             _defence = 100;
             _damage = 100;

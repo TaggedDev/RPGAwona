@@ -95,9 +95,9 @@ namespace Bot.Types
             int attack = Convert.ToInt32(Math.Floor(damage - damage * enemyProtection));
 
             if (enemy.Id == p1id)
-                ExecuteSQL($"UPDATE duel SET player2health = {attack}");
+                ExecuteSQL($"UPDATE duel SET player2health = {Health - attack}");
             else if (enemy.Id == p2id)
-                ExecuteSQL($"UPDATE duel SET player1health = {attack}");
+                ExecuteSQL($"UPDATE duel SET player1health = {Health - attack}");
 
             return 0;
         }
