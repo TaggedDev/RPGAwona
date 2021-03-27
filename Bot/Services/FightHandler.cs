@@ -103,6 +103,16 @@ namespace Bot.Modules
                 health1 = provider.GetDuelHealthAwona(user1.Id, true);
                 health2 = provider.GetDuelHealthAwona(user2.Id, false);
 
+                if (health1 < 0) health1 = 0;
+                if (health2 < 0) health2 = 0;
+
+                string last1move, last2move;
+                //last1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel"));
+                //last2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
+                //Subcommand sbc = new Subcommand();
+                //last1move = sbc.LastMove(last1move);
+                //last2move = sbc.LastMove(last2move);
+
                 byte time = 10;
                 await FightMessage(user1, user2, player1, player2, textChannel1, textChannel2);
                 var msg1 = await textChannel1.SendMessageAsync($"У вас {time} секунд");
@@ -130,8 +140,11 @@ namespace Bot.Modules
                 provider.ExecuteSQL($"UPDATE duel SET player1health = {health1 - player2damage} WHERE player1id = {player1id}");
                 provider.ExecuteSQL($"UPDATE duel SET player2health = {health2 - player1damage} WHERE player2id = {player2id}");
 
-                //provider.ExecuteSQL($"UPDATE duel SET player1move = Sleep WHERE player1id = {player1id}");
-                //provider.ExecuteSQL($"UPDATE duel SET player2move = Sleep WHERE player2id = {player2id}");
+                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Sleep' WHERE player1id = {player1id}");
+                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Sleep' WHERE player2id = {player2id}");
+
+                health1 = provider.GetDuelHealthAwona(user1.Id, true);
+                health2 = provider.GetDuelHealthAwona(user2.Id, false);
 
                 surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
                 surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
@@ -164,7 +177,6 @@ namespace Bot.Modules
 
             var builder = new EmbedBuilder()
                 .WithTitle($"Битва между {user1name} и {user2name}")
-                .WithDescription($"") // Last move
                 .WithColor(new Color(0xEB6613))
                 .WithFooter(footer =>
                 {
@@ -197,11 +209,5 @@ namespace Bot.Modules
         {
             return;
         }
-
-        public async Task EndFight()
-        {
-            return;
-        }
-
     }
 }

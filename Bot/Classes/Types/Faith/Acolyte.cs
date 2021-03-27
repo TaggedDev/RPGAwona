@@ -23,7 +23,7 @@ namespace Bot.Types
             _protection = 40;
             _multiplier = 1.45f;
             _defence = 100;
-            _damage = 20;
+            _damage = 100;
             _luck = 0.12f;
             _dodge = 0.05f;
         }

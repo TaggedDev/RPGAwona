@@ -72,5 +72,20 @@ namespace Bot.Services
             }
         }
 
+        public string LastMove(string message)
+        {
+            Console.WriteLine(message);
+            switch (message)
+            {
+                case ("Attack"):
+                    return "Атака";
+                case ("Defend"):
+                    return "Защита";
+                case ("Parry"):
+                    return "Парирование";
+                default:
+                    return "Нет хода";
+            }
+        }
     }
 }
