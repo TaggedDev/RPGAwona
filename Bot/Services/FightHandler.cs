@@ -130,7 +130,6 @@ namespace Bot.Modules
                 string player1move, player2move;
                 player1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel")); 
                 player2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
-                Console.WriteLine($"{user1.Id}!{user2.Id}");
                 int player1damage, player2damage;
                 player1damage = player1.Action(player1move, player2);
                 player2damage = player2.Action(player2move, player1);
@@ -196,6 +195,10 @@ namespace Bot.Modules
 
             var embed = builder.Build();
             await textChannel1.SendMessageAsync(
+                    null,
+                    embed: embed)
+                    .ConfigureAwait(false);
+            await textChannel2.SendMessageAsync(
                     null,
                     embed: embed)
                     .ConfigureAwait(false);
