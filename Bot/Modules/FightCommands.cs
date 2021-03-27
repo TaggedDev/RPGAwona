@@ -140,6 +140,73 @@ namespace Bot.Modules
                 await ReplyAsync("Ошибка");
         }
 
+        [Command("defend")]
+        public async Task Defend()
+        {
+            string userid;
+            userid = Convert.ToString(Context.User.Id);
+
+            // If player is already in a battle
+
+            if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
+                return;
+            // If user is not typing in his channel
+            /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
+                return;*/
+
+            string p1id, p2id;
+            p1id = Convert.ToString(provider.GetDuelIDAwona(userid, true)); // get 1st player id
+            p2id = Convert.ToString(provider.GetDuelIDAwona(userid, false)); // get 2nd player id
+
+            if (p1id.Equals(userid))
+            {
+                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Defend' WHERE player1id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **защита**");
+            }
+            else if (p2id.Equals(userid))
+            {
+                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Defend' WHERE player2id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **защита**");
+            }
+            else
+                await ReplyAsync("Ошибка");
+        }
+
+        [Command("parry")]
+        public async Task Parry()
+        {
+            string userid;
+            userid = Convert.ToString(Context.User.Id);
+
+            string channel1id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, true));
+            string channel2id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, false));
+
+            // If player is already in a battle
+
+            if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
+                return;
+            // If user is not typing in his channel
+            /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
+                return;*/
+
+            string p1id, p2id;
+            p1id = Convert.ToString(provider.GetDuelIDAwona(userid, true)); // get 1st player id
+            p2id = Convert.ToString(provider.GetDuelIDAwona(userid, false)); // get 2nd player id
+
+            if (p1id.Equals(userid))
+            {
+                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Parry' WHERE player1id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **парирование**");
+            }
+            else if (p2id.Equals(userid))
+            {
+                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Parry' WHERE player2id = {userid}");
+                await ReplyAsync("Ваш ход был засчитан как **парирование**");
+            }
+            else
+                await ReplyAsync("Ошибка");
+        }
+
         [Command("surrender")]
         public async Task Surrender()
         {
