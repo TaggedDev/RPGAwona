@@ -151,7 +151,6 @@ namespace Bot.Types
         {
             int damage, res;
             damage = Damage;
-            Console.WriteLine($"Look at {thisAction}");
             if (thisAction.Equals("Defend"))
                 res = Shield(damage, enemyAction, enemy);
             else if (thisAction.Equals("Parry"))

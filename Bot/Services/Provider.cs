@@ -16,7 +16,6 @@ namespace Bot.Modules
                 command.Connection = connection;
                 command.CommandText = cmd;
                 command.ExecuteNonQuery();
-                Console.WriteLine("Success!");
             }
         }
 

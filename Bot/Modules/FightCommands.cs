@@ -151,8 +151,6 @@ namespace Bot.Modules
             if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
                 return;
             // If user is not typing in his channel
-            /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
-                return;*/
 
             string p1id, p2id;
             p1id = Convert.ToString(provider.GetDuelIDAwona(userid, true)); // get 1st player id
@@ -219,6 +217,7 @@ namespace Bot.Modules
                 provider.ExecuteSQL($"UPDATE duel SET player1surrender = 1 WHERE player1id = {player1id}");
             else
                 provider.ExecuteSQL($"UPDATE duel SET player2surrender = 1 WHERE player2id = {player2id}");
+            await ReplyAsync("Вы сдались.");
         }
 
     }

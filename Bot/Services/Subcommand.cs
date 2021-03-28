@@ -74,7 +74,6 @@ namespace Bot.Services
 
         public string LastMove(string message)
         {
-            Console.WriteLine(message);
             switch (message)
             {
                 case ("Attack"):
