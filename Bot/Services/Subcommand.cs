@@ -2,7 +2,8 @@
 using Bot.Types;
 using Bot.Types.Magic;
 using Bot.Types.Melee;
-using Bot.Types.Ranged;
+using Bot.Types.Japan;
+using Discord;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -12,15 +13,22 @@ namespace Bot.Services
 {
     class Subcommand
     {
-        static Provider provider = new Provider();
+        static readonly Provider provider = new Provider();
 
         public bool ValidChecker(SocketGuildUser user, SocketGuildUser author, ref string answer, ulong channel_id, ulong context_id)
         {
-
+            bool is1created, is2created;
+            is1created = provider.UserAlreadyCreated(Convert.ToString(user.Id));
+            is2created = provider.UserAlreadyCreated(Convert.ToString(author.Id));
             // Check is user parameter is invalid
             if (user == null)
             {
                 answer = ":x: Вы не указали соперника";
+                return false;
+            }
+            else if (!is1created && !is2created)
+            {
+                answer = ":x: У одного из игроков нет персонажа";
                 return false;
             }
             else if (user.Id == author.Id)
@@ -61,9 +69,9 @@ namespace Bot.Services
                 case ("Komtur"):
                     Komtur komtur = new Komtur(guildUser.Username, guildUser.Id);
                     return komtur;
-                case ("Thrower"):
-                    Thrower thrower = new Thrower(guildUser.Username, guildUser.Id);
-                    return thrower;
+                case ("Asigaru"):
+                    Asigaru asigaru = new Asigaru(guildUser.Username, guildUser.Id);
+                    return asigaru;
                 case ("Alchemist"):
                     Alchemist alchemist = new Alchemist(guildUser.Username, guildUser.Id);
                     return alchemist;
@@ -74,17 +82,56 @@ namespace Bot.Services
 
         public string LastMove(string message)
         {
-            switch (message)
+            return message switch
             {
-                case ("Attack"):
-                    return "Атака";
-                case ("Defend"):
-                    return "Защита";
-                case ("Parry"):
-                    return "Парирование";
-                default:
-                    return "Нет хода";
+                ("Attack") => "Атака",
+                ("Defend") => "Защита",
+                ("Parry") => "Парирование",
+                _ => "Нет хода",
+            };
+        }
+
+        public EmbedBuilder CreateEmbed(string user1name, string user2name, bool winner, bool isSurrender)
+        {
+            uint color;
+            string message, link;
+            if (winner)
+            {
+                color = 0x21ff25;
+                message = "Вы одержали победу!";
+                link = @"https://cdn.discordapp.com/attachments/823526896582656031/825738803511033856/Win.png";
+                if (isSurrender)
+                    message = "Вы одержали победу, противник сдался!";
             }
+            else
+            {
+                color = 0xff3b21;
+                link = @"https://cdn.discordapp.com/attachments/823526896582656031/825738800814489603/Lose.png";
+                message = "Вы проиграли!";
+                if (isSurrender)
+                    message = "Вы сдались!";
+            }
+
+
+            var builder = new EmbedBuilder()
+                .WithTitle($"{user1name} :crossed_swords: {user2name}")
+                .WithColor(new Color(color))
+                .WithFooter(footer =>
+                {
+                    footer
+                        .WithText("RPG Awona");
+                })
+                .WithThumbnailUrl(link)
+                .WithAuthor(author =>
+                {
+                    author
+                        .WithName("RPG Awona")
+                        .WithIconUrl(@"https://cdn.discordapp.com/attachments/823526896582656031/825726892946227250/wowo.png");
+                })
+
+                .AddField("Результат:", $"{message}", inline: true); // Health (auth)
+
+            return builder;
         }
     }
 }

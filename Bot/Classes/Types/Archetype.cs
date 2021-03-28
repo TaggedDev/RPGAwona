@@ -39,9 +39,11 @@ namespace Bot.Types
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
                 connection.Open();
-                SqliteCommand command = new SqliteCommand();
-                command.Connection = connection;
-                command.CommandText = cmd;
+                SqliteCommand command = new SqliteCommand
+                {
+                    Connection = connection,
+                    CommandText = cmd
+                };
                 command.ExecuteNonQuery();
             }
         }
