@@ -99,20 +99,6 @@ namespace Bot.Modules
             await Task.Delay(3 * 1000);
             while (health1 > 0 && health2 > 0 && !surrender1 && !surrender2)
             {
-
-                health1 = provider.GetDuelHealthAwona(user1.Id, true);
-                health2 = provider.GetDuelHealthAwona(user2.Id, false);
-
-                if (health1 < 0) health1 = 0;
-                if (health2 < 0) health2 = 0;
-
-                string last1move, last2move;
-                //last1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel"));
-                //last2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
-                //Subcommand sbc = new Subcommand();
-                //last1move = sbc.LastMove(last1move);
-                //last2move = sbc.LastMove(last2move);
-
                 byte time = 10;
                 await FightMessage(user1, user2, player1, player2, textChannel1, textChannel2);
                 var msg1 = await textChannel1.SendMessageAsync($"У вас {time} секунд");
@@ -123,19 +109,23 @@ namespace Bot.Modules
                     Thread.Sleep(1000);
                     time--;
                 }
-
                 await msg1.DeleteAsync();
 
                 // Get player1move and player2move from SQL table `duel`
                 string player1move, player2move;
                 player1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel")); 
                 player2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
+
                 int player1damage, player2damage;
-                player1damage = player1.Action(player1move, player2);
-                player2damage = player2.Action(player2move, player1);
+                player1damage = player1.Action(player1move, player2move, player2);
+                player2damage = player2.Action(player2move, player1move, player1);
+
+                health1 = provider.GetDuelHealthAwona(user1.Id, true);
+                health2 = provider.GetDuelHealthAwona(user2.Id, false);
+                if (health1 < 0) health1 = 0;
+                if (health2 < 0) health2 = 0;
 
                 string player1id = Convert.ToString(user1.Id), player2id = Convert.ToString(user2.Id);
-
                 provider.ExecuteSQL($"UPDATE duel SET player1health = {health1 - player2damage} WHERE player1id = {player1id}");
                 provider.ExecuteSQL($"UPDATE duel SET player2health = {health2 - player1damage} WHERE player2id = {player2id}");
 
@@ -208,7 +198,7 @@ namespace Bot.Modules
             return characters;
         }
 
-        public async Task FinishMessage()
+        public void FinishMessage()
         {
             return;
         }
