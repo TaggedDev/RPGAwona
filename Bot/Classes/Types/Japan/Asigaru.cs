@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Bot.Types.Ranged
+namespace Bot.Types.Japan
 {
-    class Thrower : Archetype
+    class Asigaru : Archetype
     {
-        public Thrower(string name, ulong id, int health, int damage, float luck, float dodge)
+        public Asigaru(string name, ulong id, int health, int damage, float luck, float dodge)
         {
             _name = name;
             _id = id;
@@ -16,7 +16,7 @@ namespace Bot.Types.Ranged
             _dodge = dodge + 0.17f;
         }
 
-        public Thrower(string name, ulong id)
+        public Asigaru(string name, ulong id)
         {
             _name = name;
             _id = id;
