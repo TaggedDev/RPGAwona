@@ -12,11 +12,11 @@ namespace Bot.Modules
 {
     public class FightCommands : ModuleBase<SocketCommandContext>
     {
-        static Provider provider = new Provider();
-        static Subcommand subcommand = new Subcommand();
+        static readonly Provider provider = new Provider();
+        static readonly Subcommand subcommand = new Subcommand();
 
         [Command("challenge")]
-        [Alias("versus", "fight", "vs", "destroy")]
+        [Alias("versus", "fight", "vs", "destroy", "allez", "alles", "los")]
         public async Task Challenge(SocketGuildUser user = null)
         {
             // Create SocketGuildUser objects
@@ -106,20 +106,18 @@ namespace Bot.Modules
         }
 
         [Command("attack")]
+        [Alias("hit", "att", "damage", "smash", "kill", "dam", "dmg", "atck", "atack", "attck", "attac", "attak")]
         public async Task Attack()
         {
             string userid;
             userid = Convert.ToString(Context.User.Id);
-
-            string channel1id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, true));
-            string channel2id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, false));
-
+            string channe1lid = Convert.ToString(provider.GetFieldAwonaByID("channel1id", Convert.ToString(userid), "player1id", "duel"));
+            string channe2lid = Convert.ToString(provider.GetFieldAwonaByID("channel2id", Convert.ToString(userid), "player2id", "duel"));
             // If player is already in a battle
-
             if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
                 return;
-            // If user is not typing in his channel
-            /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
+            // If user is not typing in his channel (in progress)
+            /*if (!(channe1lid.Equals(Context.Channel.Id) || channe2lid.Equals(Context.Channel.Id)))
                 return;*/
 
             string p1id, p2id;
@@ -141,6 +139,7 @@ namespace Bot.Modules
         }
 
         [Command("defend")]
+        [Alias("shield", "defence", "s", "def", "de", "defenc", "sh")]
         public async Task Defend()
         {
             string userid;
@@ -171,19 +170,16 @@ namespace Bot.Modules
         }
 
         [Command("parry")]
+        [Alias("parri", "par", "parr", "pary", "pari", "parre", "parade")]
         public async Task Parry()
         {
             string userid;
             userid = Convert.ToString(Context.User.Id);
-
-            string channel1id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, true));
-            string channel2id = Convert.ToString(provider.GetDuelChannelIDAwona(userid, false));
-
             // If player is already in a battle
 
             if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
                 return;
-            // If user is not typing in his channel
+            // If user is not typing in his channel (in progress)
             /*if (!((channel1id.Equals(Context.Channel.Id) || channel2id.Equals(Context.Channel.Id))))
                 return;*/
 
@@ -206,6 +202,7 @@ namespace Bot.Modules
         }
 
         [Command("surrender")]
+        [Alias("surr", "sur", "srnd", "srrnd", "giveup", "give_up", "gu", "gvp", "capituler")]
         public async Task Surrender()
         {
             string userid;
