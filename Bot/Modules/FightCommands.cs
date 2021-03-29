@@ -43,7 +43,7 @@ namespace Bot.Modules
             IRole everyone = Context.Guild.EveryoneRole;
             IRole publicrole = await Context.Guild.CreateRoleAsync($"{authorname}-vs-{username}", null, new Color(0xf5fffa), false, null);
             IRole firstplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0xf5fffa), false, null);
-            IRole secondplayer = await Context.Guild.CreateRoleAsync($"{authorname}#{authorname.Length}", null, new Color(0xf5fffa), false, null);
+            IRole secondplayer = await Context.Guild.CreateRoleAsync($"{username}#{username.Length}", null, new Color(0xf5fffa), false, null);
             // Create Permissions
             OverwritePermissions noView = new OverwritePermissions(viewChannel: PermValue.Deny);
             OverwritePermissions yesView = new OverwritePermissions(viewChannel: PermValue.Allow);
@@ -70,7 +70,7 @@ namespace Bot.Modules
             // Create channel 2
             ITextChannel userchannel = await Context.Guild.CreateTextChannelAsync($"{username}-challenge");
             await userchannel.AddPermissionOverwriteAsync(everyone, noView);
-            await userchannel.AddPermissionOverwriteAsync(secondplayer, noView);
+            await userchannel.AddPermissionOverwriteAsync(secondplayer, yesView);
             await userchannel.ModifyAsync(x => x.CategoryId = category.Id);
 
             // 
