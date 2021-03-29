@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Bot.Types.Melee;
-using Bot.Types.Japan;
+using Bot.Types.Serenity;
 using Bot.Types.Magic;
 using Bot.Types;
 using Bot.Services;
@@ -33,21 +33,21 @@ namespace Bot.Modules
         public async Task CreateCharacter(string archetype = null)
         {
             if (archetype == null)
-                await ReplyAsync(":x: Выберите один из четырёх археклассов (Faith, Japan, Melee, Magic)");
+                await ReplyAsync(":x: Выберите один из четырёх археклассов (Faith, Serenity, Melee, Magic)");
             if (!provider.UserAlreadyCreated(Convert.ToString(Context.User.Id)))
             {
                 int level;
                 string type, discord_id;
                 archetype = archetype.ToLower();
 
-                if (!(archetype.Equals("faith") || archetype.Equals("japan") || archetype.Equals("melee") || archetype.Equals("magic")))
-                    await ReplyAsync(":x: Выберите один из четырёх археклассов (Faith, Japan, Melee, Magic)");
+                if (!(archetype.Equals("faith") || archetype.Equals("serenity") || archetype.Equals("melee") || archetype.Equals("magic")))
+                    await ReplyAsync(":x: Выберите один из четырёх археклассов (Faith, Serenity, Melee, Magic)");
                 else
                 {
                     type = archetype switch
                     {
                         ("faith") => "Acolyte",
-                        ("japan") => "Asigaru",
+                        ("serenity") => "Asigaru",
                         ("magic") => "Alchemist",
                         ("melee") => "Komtur",
                         _ => "Komtur",
@@ -58,7 +58,7 @@ namespace Bot.Modules
                     IRole role = archetype switch
                     {
                         ("faith") => Context.Guild.GetRole(825802241277165598),
-                        ("japan") => Context.Guild.GetRole(825802240609484880),
+                        ("serenity") => Context.Guild.GetRole(825802240609484880),
                         ("magic") => Context.Guild.GetRole(825802241616510977),
                         ("melee") => Context.Guild.GetRole(825802244825284688),
                         _ => Context.Guild.GetRole(825802244825284688),
@@ -88,7 +88,7 @@ namespace Bot.Modules
                 IRole role = archetype switch
                 {
                     ("faith") => Context.Guild.GetRole(825802241277165598),
-                    ("japan") => Context.Guild.GetRole(825802240609484880),
+                    ("serenity") => Context.Guild.GetRole(825802240609484880),
                     ("magic") => Context.Guild.GetRole(825802241616510977),
                     ("melee") => Context.Guild.GetRole(825802244825284688),
                     _ => Context.Guild.GetRole(825802244825284688),
@@ -119,7 +119,7 @@ namespace Bot.Modules
             uint color = archetype switch
             {
                 ("Faith") => 0xE7EB2D,
-                ("Japan") => 0x2DEB8C,
+                ("Serenity") => 0x2DEB8C,
                 ("Magic") => 0xD52DEB,
                 ("Melee") => 0xCF3232,
                 _ => 0xE0D41B,
@@ -136,7 +136,7 @@ namespace Bot.Modules
             Archetype character = subcommand.CreateClass(type, Context.User as SocketGuildUser);
             damage = character.Damage;
             health = character.Health;
-            armor = character.Defence;
+            armor = character.Armor;
             luck = character.Luck;
             agility = character.Dodge;
 

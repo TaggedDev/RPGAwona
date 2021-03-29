@@ -2,7 +2,7 @@
 using Bot.Types;
 using Bot.Types.Magic;
 using Bot.Types.Melee;
-using Bot.Types.Japan;
+using Bot.Types.Serenity;
 using Discord;
 using Discord.WebSocket;
 using System;
