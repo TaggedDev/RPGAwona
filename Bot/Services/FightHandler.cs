@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Bot.Types.Melee;
-using Bot.Types.Japan;
+using Bot.Types.Serenity;
 using Bot.Types.Magic;
 using Bot.Types;
 using Bot.Services;
@@ -86,9 +86,6 @@ namespace Bot.Modules
 
         public async Task FightLoop(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ICategoryChannel category, ITextChannel textChannel1, ITextChannel textChannel2, IRole publicrole, IRole firstplayer, IRole secondplayer)
         {
-            int health1, health2;
-            health1 = 1;
-            health2 = 1;
             bool surrender1, surrender2;
 
             surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
@@ -96,7 +93,7 @@ namespace Bot.Modules
             
             await Task.Delay(3 * 1000);
             
-            while (health1 > 0 && health2 > 0 && !surrender1 && !surrender2)
+            while (player1.Health > 0 && player2.Health > 0 && !surrender1 && !surrender2)
             {
                 byte time = 10;
                 //await FightMessage(user1, user2, player1, textChannel1, textChannel2);
@@ -131,37 +128,25 @@ namespace Bot.Modules
                 player1damage = player1.Action(player1move, player2move, player2);
                 player2damage = player2.Action(player2move, player1move, player1);
 
-                health1 = provider.GetDuelHealthAwona(user1.Id, true);
-                health2 = provider.GetDuelHealthAwona(user2.Id, false);
-                if (health1 < 0) health1 = 0;
-                if (health2 < 0) health2 = 0;
+                player1.Health -= player2damage;
+                player2.Health -= player1damage;
 
                 string player1id = Convert.ToString(user1.Id), player2id = Convert.ToString(user2.Id);
-
-                player1.Health = health1 - player2damage;
-                player2.Health = health2 - player1damage;
-
                 provider.ExecuteSQL($"UPDATE duel SET player1move = 'Sleep' WHERE player1id = {player1id}");
                 provider.ExecuteSQL($"UPDATE duel SET player2move = 'Sleep' WHERE player2id = {player2id}");
-
-                health1 = provider.GetDuelHealthAwona(user1.Id, true);
-                health2 = provider.GetDuelHealthAwona(user2.Id, false);
 
                 surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
                 surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
             }
-
-            health1 = provider.GetDuelHealthAwona(user1.Id, true);
-            health2 = provider.GetDuelHealthAwona(user2.Id, false);
 
             surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
             surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
 
             // DM results
 
-            if (health2 < 0)
+            if (player2.Health < 0)
                 await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
-            else if (health1 < 0)
+            else if (player1.Health < 0)
                 await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
             else if (surrender1)
                 await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
@@ -208,7 +193,7 @@ namespace Bot.Modules
                 .AddField("Ваше здоровье :heart:", $"{player1.Health}", inline: true) // Health (auth)
                 .AddField("Здоровье противника :heart:", $"{player2.Health}", inline: true) // Health (user)
                 .AddField("Ваш урон :crossed_swords:", $"{player1.Damage}") // Damage
-                .AddField($"Ваша броня :shield:", $"{player1.Defence}"); // Armor (auth)
+                .AddField($"Ваша броня :shield:", $"{player1.Armor}"); // Armor (auth)
 
             return builder;
         }
