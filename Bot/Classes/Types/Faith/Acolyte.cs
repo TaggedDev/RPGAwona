@@ -6,31 +6,20 @@ namespace Bot.Types
 {
     class Acolyte : Archetype
     {
+        readonly Provider provider = new Provider();
 
-        Provider provider = new Provider();
-
-        public Acolyte(string name, ulong id, int health, int defence, int damage, float luck, float dodge)
-        {
-            _name = name;
-            _id = id;
-            _health = health + 250;
-            _damage = damage + 20;
-            _defence = defence + 10;
-            _luck = luck + 0.12f;
-            _dodge = dodge + 0.05f;
-        }
         public Acolyte(string name, ulong id)
         {
             _name = name;
             _id = id;
             _lvl = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(Id), "discord_id", "users"));
-            _health = 250;
-            _protection = .4f;
-            _multiplier = 1.45f;
-            _defence = 100;
-            _damage = 100;
-            _luck = 0.12f;
-            _dodge = 0.05f;
+            _health = 90;
+            _damage = 70;
+            _armor = 140;
+            _protection = 1.6f;
+            _dodge = 0.6f;
+            _luck = 0.2f;
+            _multiplier = 1.7f;
         }
     }
 }

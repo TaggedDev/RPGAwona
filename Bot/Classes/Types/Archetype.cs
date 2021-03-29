@@ -13,7 +13,7 @@ namespace Bot.Types
         protected string _race; // current race 
         protected int _health; // health point
         protected int _lvl;
-        protected int _defence; // health point
+        protected int _armor; // health point
         protected int _damage; // damage parameter
         protected float _luck; // luck parameter
         protected float _multiplier; // luck multiplier
@@ -26,7 +26,7 @@ namespace Bot.Types
         public virtual string Race { get => _race; set => _race = value; } // current race 
         public virtual int Health { get => _health; set => _health = value; } // health point
         public virtual int Lvl { get => _lvl; set => _lvl = value; }
-        public virtual int Defence { get => _defence; set => _defence = value; } // health point
+        public virtual int Armor { get => _armor; set => _armor = value; } // health point
         public virtual int Damage { get => _damage; set => _damage = value; } // damage parameter
         public virtual float Luck { get => _luck; set => _luck = value; } // luck parameter
         public virtual float Multiplier { get => _multiplier; set => _multiplier = value; } // luck multiplier
@@ -71,73 +71,111 @@ namespace Bot.Types
 
         public virtual int Attack(Archetype enemy)
         {
-            int damage, enemyDefence;
-            float critChance;
-
+            int result = 0;
+            
             Random rnd = new Random();
-            double rand = rnd.NextDouble();
+            float rand = Convert.ToSingle(rnd.NextDouble());
 
-            damage = Damage;
-            enemyDefence = enemy.Defence;
-            critChance = Luck;
+            if (rand > enemy.Dodge)
+            {
+                rand = Convert.ToSingle(rnd.NextDouble());
 
-            if (critChance > rand)
-                damage *= Convert.ToInt32(Math.Floor(Multiplier));
+                if (rand > Luck)
+                    result = Convert.ToInt32(Damage + Damage * Multiplier);
+                else
+                    result = Damage;
 
-            int result = damage - Convert.ToInt32(Math.Floor(enemyDefence * .15f));
-            return result;
+                result = Convert.ToInt32(result - enemy.Armor * enemy.Protection);
+                if (result < 0) return 0;
+
+                return result;
+
+            } else
+                return 0;
+
+           
+            
         }
 
         public virtual int Shield(int damage, string enemyAction, Archetype enemy)
         {
-            if (enemyAction.Equals("Attack"))
+            Random rnd = new Random();
+            if (Convert.ToSingle(rnd.NextDouble()) > Dodge)
             {
-                ulong p1id, p2id;
-
-                Provider provider = new Provider();
-                p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
-                p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
-                if (p1id == 0)
+                if (enemyAction.Equals("Attack"))
                 {
-                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
-                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
+                    ulong p1id, p2id;
+
+                    Provider provider = new Provider();
+                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
+                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
+                    if (p1id == 0)
+                    {
+                        p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
+                        p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
+                    }
+
+
+                    if (enemy.Luck < Convert.ToSingle(rnd.NextDouble()))
+                        damage *= Convert.ToInt32(enemy.Multiplier);
+
+                    int damagepoint = Convert.ToInt32(damage - Armor * Protection);
+                    if (damagepoint < 0) damagepoint = 0;
+
+                    if (enemy.Id == p1id)
+                        ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
+                    else if (enemy.Id == p2id)
+                        ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
                 }
-
-                int damagepoint = Convert.ToInt32(damage/10);
-
-                if (enemy.Id == p1id)
-                    ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
-                else if (enemy.Id == p2id)
-                    ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
             }
             return 0;
+        
         }
 
         public virtual int Parry(int damage, string enemyAction, Archetype enemy)
         {
-
-            if (enemyAction.Equals("Attack"))
+            Random rnd = new Random();
+            if (Convert.ToSingle(rnd.NextDouble()) > Dodge)
             {
-                ulong p1id, p2id;
-
-                Provider provider = new Provider();
-                p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
-                p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
-                if (p1id == 0)
+                if (enemyAction.Equals("Attack"))
                 {
-                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
-                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
+                    ulong p1id, p2id;
+
+                    Provider provider = new Provider();
+                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
+                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
+                    if (p1id == 0)
+                    {
+                        p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
+                        p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
+                    }
+
+                    if (enemy.Luck < Convert.ToSingle(rnd.NextDouble()))
+                        damage *= Convert.ToInt32(enemy.Multiplier);
+
+                    int damagepoint = Convert.ToInt32(damage - Armor * Protection);
+                    if (damagepoint < 0) damagepoint = 0;
+
+                    // Depends on what player is attacking, take % of enemy damage in
+                    if (enemy.Id == p1id)
+                        ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
+                    else if (enemy.Id == p2id)
+                        ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
+
+                    int result;
+                    if (Luck < rnd.NextDouble())
+                        result = Convert.ToInt32(Damage + Damage * Multiplier);
+                    else
+                        result = Damage;
+
+                    // But anyway return the damage that author would do to enemy
+                    result = Convert.ToInt32(result - enemy.Armor * enemy.Protection);
+                    if (result < 0) return 0;
+
+                    return result;
+
+                    
                 }
-
-                int damagepoint = Convert.ToInt32(damage/2);
-                // Depends on what player is attacking, take % of enemy damage in
-                if (enemy.Id == p1id)
-                    ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
-                else if (enemy.Id == p2id)
-                    ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
-
-                // But anyway return the damage that author would do to enemy
-                return damage;
             }
             
             // If enemy action is not attack return 0 because parry works so
@@ -162,6 +200,8 @@ namespace Bot.Types
             else
                 res = Sleep();
 
+            if (res < 0)
+                return 0;
             return res;
         }
     }

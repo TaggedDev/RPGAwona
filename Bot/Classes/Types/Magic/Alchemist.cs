@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bot.Modules;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,24 +7,20 @@ namespace Bot.Types.Magic
 {
     class Alchemist : Archetype
     {
-        public Alchemist(string name, ulong id, int health, int damage, float luck, float dodge)
-        {
-            _name = name;
-            _id = id;
-            _health = health + 775;
-            _damage = damage + 60;
-            _luck = luck + 0.21f;
-            _dodge = dodge + 0.17f;
-        }
+        readonly Provider provider = new Provider();
 
         public Alchemist(string name, ulong id)
         {
             _name = name;
             _id = id;
-            _health = 775;
-            _damage = 60;
-            _luck = 0.21f;
-            _dodge = 0.17f;
+            _lvl = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(Id), "discord_id", "users"));
+            _health = 60;
+            _damage = 130;
+            _armor = 110;
+            _protection = 1.6f;
+            _dodge = 0.2f;
+            _luck = 0.4f;
+            _multiplier = 1.70f;
         }
     }
 }

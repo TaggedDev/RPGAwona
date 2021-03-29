@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Bot.Modules;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,26 +7,20 @@ namespace Bot.Types.Melee
 {
     class Komtur : Archetype
     {
-        public Komtur(string name, ulong id, int health, int damage, float luck, float dodge)
-        {
-            _name = name;
-            _id = id;
-            _health = health + 775;
-            _damage = damage + 60;
-            _luck = luck + 0.21f;
-            _dodge = dodge + 0.17f;
-        }
+        readonly Provider provider = new Provider();
 
         public Komtur(string name, ulong id)
         {
             _name = name;
             _id = id;
-            _health = 775;
-            _damage = 60;
-            _luck = 0.21f;
-            _dodge = 0.17f;
+            _lvl = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(Id), "discord_id", "users"));
+            _health = 600;
+            _damage = 90;
+            _armor = 150;
+            _protection = 1.8f;
+            _dodge = 0.1f;
+            _luck = 0.2f;
+            _multiplier = 1.9f;
         }
-
-
     }
 }
