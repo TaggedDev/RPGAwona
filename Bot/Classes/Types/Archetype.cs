@@ -103,7 +103,7 @@ namespace Bot.Types
                     p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
                 }
 
-                int damagepoint = Convert.ToInt32(Math.Floor(damage - (damage * Protection) - (Defence / 25)));
+                int damagepoint = Convert.ToInt32(damage/10);
 
                 if (enemy.Id == p1id)
                     ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
@@ -129,7 +129,7 @@ namespace Bot.Types
                     p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
                 }
 
-                int damagepoint = Convert.ToInt32(Math.Floor(damage * Protection + damage * Defence / 25));
+                int damagepoint = Convert.ToInt32(damage/2);
                 // Depends on what player is attacking, take % of enemy damage in
                 if (enemy.Id == p1id)
                     ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");

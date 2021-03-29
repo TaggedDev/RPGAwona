@@ -111,11 +111,13 @@ namespace Bot.Modules
         {
             string userid;
             userid = Convert.ToString(Context.User.Id);
-            string channe1lid = Convert.ToString(provider.GetFieldAwonaByID("channel1id", Convert.ToString(userid), "player1id", "duel"));
-            string channe2lid = Convert.ToString(provider.GetFieldAwonaByID("channel2id", Convert.ToString(userid), "player2id", "duel"));
+            //string channe1lid = Convert.ToString(provider.GetFieldAwonaByID("channel1id", Convert.ToString(userid), "player1id", "duel"));
+            //string channe2lid = Convert.ToString(provider.GetFieldAwonaByID("channel2id", Convert.ToString(userid), "player2id", "duel"));
+            
             // If player is already in a battle
             if (!(provider.UserAlreadyInBattle(userid, true) || provider.UserAlreadyInBattle(userid, false)))
                 return;
+            
             // If user is not typing in his channel (in progress)
             /*if (!(channe1lid.Equals(Context.Channel.Id) || channe2lid.Equals(Context.Channel.Id)))
                 return;*/
