@@ -92,11 +92,11 @@ namespace Bot.Modules
             surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
             
             await Task.Delay(3 * 1000);
-            
+            int counter = 1;
+
             while (player1.Health > 0 && player2.Health > 0 && !surrender1 && !surrender2)
             {
                 byte time = 10;
-                //await FightMessage(user1, user2, player1, textChannel1, textChannel2);
 
                 Embed embed1, embed2;
                 
@@ -113,10 +113,10 @@ namespace Bot.Modules
 
                 while (time > 0)
                 {
-                    //await msg1.ModifyAsync(m => m.Content = $"Осталось {time} секунд");
                     Thread.Sleep(1000);
                     time--;
                 }
+
                 await msg1.DeleteAsync();
 
                 // Get player1move and player2move from SQL table `duel`
@@ -128,6 +128,12 @@ namespace Bot.Modules
                 player1damage = player1.Action(player1move, player2move, player2);
                 player2damage = player2.Action(player2move, player1move, player1);
 
+                ResultMessage(player1damage, player2damage, counter, textChannel1, textChannel2);
+                counter++;
+
+                if (player2damage < 0) player2damage = 0;
+                if (player1damage < 0) player1damage = 0;
+
                 player1.Health -= player2damage;
                 player2.Health -= player1damage;
 
@@ -137,6 +143,7 @@ namespace Bot.Modules
 
                 surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
                 surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
+                
             }
 
             surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
@@ -165,6 +172,61 @@ namespace Bot.Modules
             category.DeleteAsync();
             
 
+        }
+
+        private async void ResultMessage(int player1damage, int player2damage, int counter, ITextChannel tc1, ITextChannel tc2)
+        {
+            string msg_s;
+
+            msg_s = "";
+            if (player1damage == -2)
+                msg_s += "Игроки парировали друг друга.";
+            else if (player1damage == -1)
+                msg_s += "Удар первого игрока был заблокирован";
+            else if (player1damage == -4)
+                msg_s += "Второй игрок уклонился от удара";
+            else if (player1damage == -3)
+                msg_s += "Первый игрок не пробил второго игрока";
+            else if (player1damage == 0)
+                msg_s += "Первый игрок проспал";
+            else
+                msg_s += $"Первый игрок нанёс :dagger: {player1damage} урона.";
+
+            if (player2damage == -2)
+                msg_s += "\nИгроки парировали друг друга";
+            else if (player2damage == -1)
+                msg_s += "\nУдар второго игрока был заблокирован";
+            else if (player2damage == -3)
+                msg_s += "Второй игрок не пробил первого игрока";
+            else if (player2damage == -4)
+                msg_s += "\nПервый игрок уклонился от удара";
+            else if (player2damage == 0)
+                msg_s += "\nВторой игрок проспал";
+            else
+                msg_s += $"\nВторой игрок нанёс :dagger: {player2damage} урона.";
+
+            Embed embed;
+            EmbedBuilder builder = new EmbedBuilder()
+                .WithTitle($"Ход {counter}")
+                .WithDescription(msg_s)
+                .WithColor(new Color(0xEB6613))
+                .WithFooter(footer =>
+                {
+                    footer
+                        .WithText("RPG Awona")
+                        .WithIconUrl("https://cdn.discordapp.com/attachments/823526896582656031/825726892946227250/wowo.png");
+
+                })
+                .WithThumbnailUrl("https://cdn.discordapp.com/attachments/823526896582656031/825726892946227250/wowo.png")
+                .WithAuthor(author =>
+                {
+                    author
+                        .WithName("RPG Awona")
+                        .WithIconUrl(@"https://cdn.discordapp.com/attachments/823526896582656031/825726892946227250/wowo.png");
+                });
+            embed = builder.Build();
+            await tc1.SendMessageAsync(null, false, embed);
+            await tc2.SendMessageAsync(null, false, embed);
         }
 
         public EmbedBuilder FightMessage(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2)

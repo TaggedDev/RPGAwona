@@ -32,8 +32,11 @@ namespace Bot.Modules
         [Alias("create_character")]
         public async Task CreateCharacter(string archetype = null)
         {
-            if (archetype == null)
+            if (archetype == null) {
                 await ReplyAsync(":x: Выберите один из четырёх археклассов (Faith, Serenity, Melee, Magic)");
+                return;
+            }
+                
             if (!provider.UserAlreadyCreated(Convert.ToString(Context.User.Id)))
             {
                 int level;

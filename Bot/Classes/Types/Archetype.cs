@@ -69,72 +69,110 @@ namespace Bot.Types
             return null;
         }
 
-        public virtual int Attack(Archetype enemy)
+        public virtual int Attack(string enemyAction, Archetype enemy)
         {
-            int result = 0;
-            
+            int result;
+
             Random rnd = new Random();
             float rand = Convert.ToSingle(rnd.NextDouble());
 
-            if (rand > enemy.Dodge)
-            {
-                rand = Convert.ToSingle(rnd.NextDouble());
+            if (enemyAction.Equals("Attack"))
+                return -2;
+            if (enemyAction.Equals("Defend"))
+                return -1;
 
-                if (rand > Luck)
-                    result = Convert.ToInt32(Damage + Damage * Multiplier);
+            if (enemyAction.Equals("Ability") || enemyAction.Equals("Sleep"))
+            { 
+                if (rand > enemy.Dodge)
+                {
+                    rand = Convert.ToSingle(rnd.NextDouble());
+
+                    if (rand > Luck)
+                        result = Convert.ToInt32(Damage + Damage * Multiplier);
+                    else
+                        result = Damage;
+
+                    result = Convert.ToInt32(result/enemy.Protection - enemy.Armor);
+                    if (result < 0) return -3;
+
+                    return result;
+
+                }
                 else
-                    result = Damage;
-
-                result = Convert.ToInt32(result - enemy.Armor * enemy.Protection);
-                if (result < 0) return 0;
-
-                return result;
-
-            } else
-                return 0;
-
+                    return -4;
+            }
+            return 0;
            
             
         }
 
-        public virtual int Shield(int damage, string enemyAction, Archetype enemy)
+        public virtual int Shield(string enemyAction, Archetype enemy)
         {
+            int result;
+
             Random rnd = new Random();
-            if (Convert.ToSingle(rnd.NextDouble()) > Dodge)
+            float rand = Convert.ToSingle(rnd.NextDouble());
+
+            if (enemyAction.Equals("Defend"))
+                return -2;
+            if (enemyAction.Equals("Ability"))
+                return -1;
+
+            if (enemyAction.Equals("Attack") || enemyAction.Equals("Sleep"))
             {
-                if (enemyAction.Equals("Attack"))
+                if (rand > enemy.Dodge)
                 {
-                    ulong p1id, p2id;
+                    rand = Convert.ToSingle(rnd.NextDouble());
 
-                    Provider provider = new Provider();
-                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
-                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
-                    if (p1id == 0)
-                    {
-                        p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
-                        p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
-                    }
+                    if (rand > Luck)
+                        result = Convert.ToInt32(Damage + Damage * Multiplier);
+                    else
+                        result = Damage;
 
+                    result = Convert.ToInt32(result / enemy.Protection - enemy.Armor);
+                    if (result < 0) return -3;
 
-                    if (enemy.Luck < Convert.ToSingle(rnd.NextDouble()))
-                        damage *= Convert.ToInt32(enemy.Multiplier);
+                    return result;
 
-                    int damagepoint = Convert.ToInt32(damage - Armor * Protection);
-                    if (damagepoint < 0) damagepoint = 0;
-
-                    if (enemy.Id == p1id)
-                        ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
-                    else if (enemy.Id == p2id)
-                        ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
                 }
+                else
+                    return -4;
             }
             return 0;
-        
         }
 
-        public virtual int Ability(int damage, string enemyAction, Archetype enemy)
+        public virtual int Ability(string enemyAction, Archetype enemy)
         {
-            
+            int result;
+
+            Random rnd = new Random();
+            float rand = Convert.ToSingle(rnd.NextDouble());
+
+            if (enemyAction.Equals("Ability"))
+                return -2;
+            if (enemyAction.Equals("Attack"))
+                return -1;
+
+            if (enemyAction.Equals("Defend") || enemyAction.Equals("Sleep"))
+            {
+                if (rand > enemy.Dodge)
+                {
+                    rand = Convert.ToSingle(rnd.NextDouble());
+
+                    if (rand > Luck)
+                        result = Convert.ToInt32(Damage + Damage * Multiplier);
+                    else
+                        result = Damage;
+
+                    result = Convert.ToInt32(result / enemy.Protection - enemy.Armor);
+                    if (result < 0) return -3;
+
+                    return result;
+
+                }
+                else
+                    return -4;
+            }
             return 0;
         }
 
@@ -145,14 +183,13 @@ namespace Bot.Types
 
         public virtual int Action(string thisAction, string enemyAction, Archetype enemy)
         {
-            int damage, res;
-            damage = Damage;
+            int res;
             if (thisAction.Equals("Defend"))
-                res = Shield(damage, enemyAction, enemy);
+                res = Shield(enemyAction, enemy);
             else if (thisAction.Equals("Ability"))
-                res = Ability(damage, enemyAction, enemy);
+                res = Ability(enemyAction, enemy);
             else if (thisAction.Equals("Attack"))
-                res = Attack(enemy);
+                res = Attack(enemyAction, enemy);
             else
                 res = Sleep();
 

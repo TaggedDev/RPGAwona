@@ -172,7 +172,7 @@ namespace Bot.Modules
         }
 
         [Command("Ability")]
-        [Alias("parri", "par", "parr", "pary", "pari", "parre", "parade")]
+        [Alias("ability", "skill", "perk", "three", "abilka", "abilty", "abiliti", "skil", "perk", "ultimate", "utlta", "ult")]
         public async Task Ability()
         {
             string userid;
@@ -192,12 +192,12 @@ namespace Bot.Modules
             if (p1id.Equals(userid))
             {
                 provider.ExecuteSQL($"UPDATE duel SET player1move = 'Ability' WHERE player1id = {userid}");
-                await ReplyAsync("Ваш ход был засчитан как **парирование**");
+                await ReplyAsync("Ваш ход был засчитан как **способность**");
             }
             else if (p2id.Equals(userid))
             {
                 provider.ExecuteSQL($"UPDATE duel SET player2move = 'Ability' WHERE player2id = {userid}");
-                await ReplyAsync("Ваш ход был засчитан как **парирование**");
+                await ReplyAsync("Ваш ход был засчитан как **способность**");
             }
             else
                 await ReplyAsync("Ошибка");
