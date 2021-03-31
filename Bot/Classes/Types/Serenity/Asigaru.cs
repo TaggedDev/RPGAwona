@@ -14,12 +14,12 @@ namespace Bot.Types.Serenity
             _name = name;
             _id = id;
             _lvl = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(Id), "discord_id", "users"));
-            _health = 1100;
-            _damage = 110;
-            _armor = 80;
+            _health = 33;
+            _damage = 43;
+            _armor = 23;
             _protection = 1.5f;
-            _dodge = 0.2f;
-            _luck = 0.6f;
+            _dodge = 0.3f;
+            _luck = 0.5f;
             _multiplier = 1.60f;
         }
     }

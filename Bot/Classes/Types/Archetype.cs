@@ -132,53 +132,9 @@ namespace Bot.Types
         
         }
 
-        public virtual int Parry(int damage, string enemyAction, Archetype enemy)
+        public virtual int Ability(int damage, string enemyAction, Archetype enemy)
         {
-            Random rnd = new Random();
-            if (Convert.ToSingle(rnd.NextDouble()) > Dodge)
-            {
-                if (enemyAction.Equals("Attack"))
-                {
-                    ulong p1id, p2id;
-
-                    Provider provider = new Provider();
-                    p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(Id), "player1id", "duel"));
-                    p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(enemy.Id), "player2id", "duel"));
-                    if (p1id == 0)
-                    {
-                        p1id = Convert.ToUInt64(provider.GetFieldAwonaByID("player2id", Convert.ToString(Id), "player2id", "duel"));
-                        p2id = Convert.ToUInt64(provider.GetFieldAwonaByID("player1id", Convert.ToString(enemy.Id), "player1id", "duel"));
-                    }
-
-                    if (enemy.Luck < Convert.ToSingle(rnd.NextDouble()))
-                        damage *= Convert.ToInt32(enemy.Multiplier);
-
-                    int damagepoint = Convert.ToInt32(damage - Armor * Protection);
-                    if (damagepoint < 0) damagepoint = 0;
-
-                    // Depends on what player is attacking, take % of enemy damage in
-                    if (enemy.Id == p1id)
-                        ExecuteSQL($"UPDATE duel SET player2health = {Health - damagepoint} WHERE player1id = {enemy.Id}");
-                    else if (enemy.Id == p2id)
-                        ExecuteSQL($"UPDATE duel SET player1health = {Health - damagepoint} WHERE player2id = {enemy.Id}");
-
-                    int result;
-                    if (Luck < rnd.NextDouble())
-                        result = Convert.ToInt32(Damage + Damage * Multiplier);
-                    else
-                        result = Damage;
-
-                    // But anyway return the damage that author would do to enemy
-                    result = Convert.ToInt32(result - enemy.Armor * enemy.Protection);
-                    if (result < 0) return 0;
-
-                    return result;
-
-                    
-                }
-            }
             
-            // If enemy action is not attack return 0 because parry works so
             return 0;
         }
 
@@ -194,7 +150,7 @@ namespace Bot.Types
             if (thisAction.Equals("Defend"))
                 res = Shield(damage, enemyAction, enemy);
             else if (thisAction.Equals("Parry"))
-                res = Parry(damage, enemyAction, enemy);
+                res = Ability(damage, enemyAction, enemy);
             else if (thisAction.Equals("Attack"))
                 res = Attack(enemy);
             else
