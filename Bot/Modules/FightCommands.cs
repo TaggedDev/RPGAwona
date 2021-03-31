@@ -171,9 +171,9 @@ namespace Bot.Modules
                 await ReplyAsync("Ошибка");
         }
 
-        [Command("parry")]
+        [Command("Ability")]
         [Alias("parri", "par", "parr", "pary", "pari", "parre", "parade")]
-        public async Task Parry()
+        public async Task Ability()
         {
             string userid;
             userid = Convert.ToString(Context.User.Id);
@@ -191,12 +191,12 @@ namespace Bot.Modules
 
             if (p1id.Equals(userid))
             {
-                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Parry' WHERE player1id = {userid}");
+                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Ability' WHERE player1id = {userid}");
                 await ReplyAsync("Ваш ход был засчитан как **парирование**");
             }
             else if (p2id.Equals(userid))
             {
-                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Parry' WHERE player2id = {userid}");
+                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Ability' WHERE player2id = {userid}");
                 await ReplyAsync("Ваш ход был засчитан как **парирование**");
             }
             else

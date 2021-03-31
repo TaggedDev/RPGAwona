@@ -149,7 +149,7 @@ namespace Bot.Types
             damage = Damage;
             if (thisAction.Equals("Defend"))
                 res = Shield(damage, enemyAction, enemy);
-            else if (thisAction.Equals("Parry"))
+            else if (thisAction.Equals("Ability"))
                 res = Ability(damage, enemyAction, enemy);
             else if (thisAction.Equals("Attack"))
                 res = Attack(enemy);
