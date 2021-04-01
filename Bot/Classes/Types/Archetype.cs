@@ -101,7 +101,7 @@ namespace Bot.Types
                 else
                     return -4;
             }
-            return 0;
+            return -6;
            
             
         }
@@ -138,7 +138,7 @@ namespace Bot.Types
                 else
                     return -4;
             }
-            return 0;
+            return -6;
         }
 
         public virtual int Ability(string enemyAction, Archetype enemy)
@@ -173,12 +173,12 @@ namespace Bot.Types
                 else
                     return -4;
             }
-            return 0;
+            return -5;
         }
 
         public virtual int Sleep()
         {
-            return 0;
+            return -6;
         }
 
         public virtual int Action(string thisAction, string enemyAction, Archetype enemy)
