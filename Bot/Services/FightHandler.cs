@@ -188,17 +188,6 @@ namespace Bot.Modules
                 _ => $"Первый игрок нанёс :dagger: {player1damage} урона.",
             };
 
-            /*msg_s = player1damage switch
-            {
-                (-1) => "Удар первого игрока был заблокирован",
-                (-2) => "Игроки парировали друг друга",
-                (-3) => "Первый игрок не пробил второго игрока",
-                (-4) => "Второй игрок уклонился от удара",
-                (-5) => "Ошибка",
-                (-6) => "Первый игрок проспал",
-                _ => $"Первый игрок нанёс :dagger: {player1damage} урона.",
-            };*/
-
             msg_s += player2damage switch
             {
                 (-1) => "\nУдар второго игрока был заблокирован",
@@ -230,8 +219,14 @@ namespace Bot.Modules
                         .WithIconUrl(@"https://cdn.discordapp.com/attachments/823526896582656031/825726892946227250/wowo.png");
                 });
             embed = builder.Build();
-            await tc1.SendMessageAsync(null, false, embed);
-            await tc2.SendMessageAsync(null, false, embed);
+            await tc1.SendMessageAsync(
+                    null,
+                    embed: embed)
+                    .ConfigureAwait(false);
+            await tc2.SendMessageAsync(
+                    null,
+                    embed: embed)
+                    .ConfigureAwait(false);
         }
 
         public EmbedBuilder FightMessage(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2)
