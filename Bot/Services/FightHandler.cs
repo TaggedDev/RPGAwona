@@ -57,7 +57,7 @@ namespace Bot.Modules
             // Generate embed
             var builder = new EmbedBuilder()
                 .WithTitle($"Битва между {user1name} и {user2name}")
-                .WithDescription($"{type1} {level1} уровня **VS** {type2} {level2} уровня")
+                .WithDescription($"{type1} {level1} уровня **VS** {type2} {level2} уровня\n\n!attack - атака !defend - защита !ability - способность")
                 .WithColor(new Color(0xEB6613))
                 .WithFooter(footer =>
                 {
