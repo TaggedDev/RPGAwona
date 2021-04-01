@@ -34,7 +34,7 @@ namespace Bot.Types
         public virtual float Dodge { get => _dodge; set => _dodge = value; } // dodge chance
         public virtual string Move { get => _move; set => _move = value; } // player's choose
 
-        public void ExecuteSQL(string cmd)
+        void ExecuteSQL(string cmd)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
             {
@@ -192,9 +192,6 @@ namespace Bot.Types
                 res = Attack(enemyAction, enemy);
             else
                 res = Sleep();
-
-            if (res < 0)
-                return 0;
             return res;
         }
     }

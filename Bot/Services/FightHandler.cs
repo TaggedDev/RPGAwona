@@ -176,9 +176,8 @@ namespace Bot.Modules
 
         private async void ResultMessage(int player1damage, int player2damage, int counter, ITextChannel tc1, ITextChannel tc2)
         {
-            string msg_s;
 
-            msg_s = player1damage switch
+            string msg_s = player1damage switch
             {
                 (-1) => "Удар первого игрока был заблокирован",
                 (-2) => "Игроки парировали друг друга",
@@ -188,6 +187,17 @@ namespace Bot.Modules
                 (-6) => "Первый игрок проспал",
                 _ => $"Первый игрок нанёс :dagger: {player1damage} урона.",
             };
+
+            /*msg_s = player1damage switch
+            {
+                (-1) => "Удар первого игрока был заблокирован",
+                (-2) => "Игроки парировали друг друга",
+                (-3) => "Первый игрок не пробил второго игрока",
+                (-4) => "Второй игрок уклонился от удара",
+                (-5) => "Ошибка",
+                (-6) => "Первый игрок проспал",
+                _ => $"Первый игрок нанёс :dagger: {player1damage} урона.",
+            };*/
 
             msg_s += player2damage switch
             {

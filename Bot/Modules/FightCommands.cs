@@ -21,6 +21,27 @@ namespace Bot.Modules
         {
             // Create SocketGuildUser objects
             SocketGuildUser author = (Context.Message.Author as SocketGuildUser);
+            
+            // Creating objects
+            string type1, type2;
+            type1 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(author.Id), "discord_id", "users"));
+            type2 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(user.Id), "discord_id", "users"));
+            Archetype player1 = subcommand.CreateClass(type1, author);
+            Archetype player2 = subcommand.CreateClass(type2, user);
+            
+            // If created successfully
+            if (player1 == null)
+            {
+                await ReplyAsync("Ошибка при создании первого игрока");
+                return;
+            }
+            else if (player2 == null)
+            {
+                await ReplyAsync("Ошибка при создании второго игрока");
+                return;
+            }
+
+            await ReplyAsync(":white_check_mark: Создаю каналы...");
 
             ulong context_id = Context.Channel.Id;
             ulong channel_id = 823844887787077682;
@@ -31,6 +52,7 @@ namespace Bot.Modules
                 await ReplyAsync(answer);
                 return;
             }
+
             //
             // Get everyone role, create new role, create permissions, set roles
             //
@@ -78,31 +100,12 @@ namespace Bot.Modules
             //
 
             // Start message
+            provider.ExecuteSQL($"INSERT INTO duel VALUES (\"{authorname}-vs-{username}\", \"{authorname}\", \"{username}\", {author.Id}, {user.Id}, {authorchannel.Id}, {userchannel.Id}, \"Sleep\", \"Sleep\", {player1.Health}, {player2.Health}, false, false)");
             FightHandler fightHandler = new FightHandler();
             await fightHandler.StartMessage(author, user, userchannel, authorchannel);
 
-            // Creating objects
-            string type1, type2;
-            type1 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(author.Id), "discord_id", "users"));
-            type2 = Convert.ToString(provider.GetFieldAwonaByID("type", Convert.ToString(user.Id), "discord_id", "users"));
-            Archetype player1 = subcommand.CreateClass(type1, author);
-            Archetype player2 = subcommand.CreateClass(type2, user);
-            provider.ExecuteSQL($"INSERT INTO duel VALUES (\"{authorname}-vs-{username}\", \"{authorname}\", \"{username}\", {author.Id}, {user.Id}, {authorchannel.Id}, {userchannel.Id}, \"Sleep\", \"Sleep\", {player1.Health}, {player2.Health}, false, false)");
-            // If created successfully
-            if (player1 == null)
-            {
-                await ReplyAsync("Ошибка при создании первого игрока");
-                return;
-            }
-            else if (player2 == null)
-            {
-                await ReplyAsync("Ошибка при создании второго игрока");
-                return;
-            }
-            await ReplyAsync(":white_check_mark: Вызов отправлен");
+            await ReplyAsync(":white_check_mark: Бой начат, каналы созданы");
             fightHandler.FightLoop(author, user, player1, player2, category, authorchannel, userchannel, publicrole, firstplayer, secondplayer);
-
-
         }
 
         [Command("attack")]
