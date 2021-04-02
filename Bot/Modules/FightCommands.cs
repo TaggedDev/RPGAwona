@@ -106,6 +106,7 @@ namespace Bot.Modules
 
             await ReplyAsync(":white_check_mark: Бой начат, каналы созданы");
             fightHandler.FightLoop(author, user, player1, player2, category, authorchannel, userchannel, publicrole, firstplayer, secondplayer);
+            
         }
 
         [Command("attack")]

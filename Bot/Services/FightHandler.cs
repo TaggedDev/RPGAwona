@@ -86,11 +86,6 @@ namespace Bot.Modules
 
         public async Task FightLoop(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ICategoryChannel category, ITextChannel textChannel1, ITextChannel textChannel2, IRole publicrole, IRole firstplayer, IRole secondplayer)
         {
-            bool surrender1, surrender2;
-
-            surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
-            surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
-            
             await Task.Delay(3 * 1000);
             int counter = 1;
 
@@ -146,10 +141,17 @@ namespace Bot.Modules
                 
             }
 
+            // DM results
+            await FinishDuel(user1, user2, player1, player2, textChannel1, textChannel2);
+        }
+
+        private async Task FinishDuel(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ITextChannel textChannel1, ITextChannel textChannel2)
+        {
+            bool surrender1, surrender2;
             surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
             surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
 
-            // DM results
+
 
             if (player2.Health < 0)
                 await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
@@ -170,7 +172,16 @@ namespace Bot.Modules
             textChannel1.DeleteAsync();
             textChannel2.DeleteAsync();
             category.DeleteAsync();
-            
+
+            GainExperience(user1.Id, user2.Id, player1, player2);
+        }
+
+        private async void GainExperience(ulong user1id, ulong user2id, Archetype player1, Archetype player2)
+        {
+            int p1exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(user1id), "player1id", "duel"));
+            int p2exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(user2id), "player2id", "duel"));
+
+            if (player1.Health < 0) return;
 
         }
 
