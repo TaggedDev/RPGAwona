@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Bot.Types.Melee;
+using Bot.Types.Honor;
 using Bot.Types.Serenity;
 using Bot.Types.Magic;
 using Bot.Types;

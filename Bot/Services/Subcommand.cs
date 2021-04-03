@@ -1,7 +1,7 @@
 ﻿using Bot.Modules;
 using Bot.Types;
 using Bot.Types.Magic;
-using Bot.Types.Melee;
+using Bot.Types.Honor;
 using Bot.Types.Serenity;
 using Discord;
 using Discord.WebSocket;
@@ -67,7 +67,7 @@ namespace Bot.Services
                     Acolyte acolyte = new Acolyte(guildUser.Username, guildUser.Id);
                     return acolyte;
                 case ("Komtur"):
-                    Komtur komtur = new Komtur(guildUser.Username, guildUser.Id);
+                    Honor komtur = new Honor(guildUser.Username, guildUser.Id);
                     return komtur;
                 case ("Asigaru"):
                     Asigaru asigaru = new Asigaru(guildUser.Username, guildUser.Id);
