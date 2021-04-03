@@ -57,6 +57,7 @@ namespace Bot.Modules
                     };
                     discord_id = Convert.ToString(Context.User.Id);
                     level = 1;
+                    provider.ExecuteSQL($"INSERT INTO stats (discord_id, wins, loses, fights) VALUES ('{discord_id}', '0', '0', '0')");
                     provider.ExecuteSQL($"INSERT INTO users (discord_id, level, money, exp, archetype, type) VALUES ('{discord_id}', '{level}', 0, 0, '{archetype}', '{type}')");
                     IRole role = archetype switch
                     {
@@ -128,6 +129,7 @@ namespace Bot.Modules
                 _ => 0xE0D41B,
             };
 
+
             int damage, health, armor;
             float luck, agility;
 
@@ -135,6 +137,13 @@ namespace Bot.Modules
             ulong discord_id;
             name = Context.User.Username + "#" + Context.User.Discriminator;
             discord_id = Context.User.Id;
+
+            string wins, fights;
+            wins = Convert.ToString(provider.GetFieldAwonaByID("wins", Convert.ToString(discord_id), "discord_id", "stats"));
+            fights = Convert.ToString(provider.GetFieldAwonaByID("fights", Convert.ToString(discord_id), "discord_id", "stats"));
+
+            if (fights.Equals("0")) fights = "N/A";
+            
 
             Archetype character = subcommand.CreateClass(type, Context.User as SocketGuildUser);
             damage = character.Damage;
@@ -153,9 +162,10 @@ namespace Bot.Modules
                 ("Komtur") => @"https://cdn.discordapp.com/attachments/823526896582656031/825726890609999902/Komtur.png",
                 _ => awonalink,
             };
+
             var builder = new EmbedBuilder()
                 .WithTitle($"{name}")
-                .WithDescription($"**Окно персонажа**\n\nКласс: {type}\nАрхетип: {archetype}\nУровень: {level}\n")
+                .WithDescription($"**Окно персонажа**\n\nКласс: {type}\nАрхетип: {archetype}\nУровень: {level}\nВсего боёв: {fights}\nПроцент побед: {wins}%")
                 //.WithUrl("https://discordapp.com")
                 .WithColor(new Color(color))
                 .WithTimestamp(DateTimeOffset.FromUnixTimeMilliseconds(1616356046810))
