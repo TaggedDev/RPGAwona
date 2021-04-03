@@ -205,7 +205,11 @@ namespace Bot.Modules
         private void UpdateTablesVersus(ulong userid, bool winner)
         {
             int exp;
+            int[] expForLevel = { 250, 516, 844, 1312, 1974, 2966, 4427, 6601, 9850, 13066, 16510, 20356, 24770, 29913, 34642, 39244, 43913, 48774, 57866};
             exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(userid), "discord_id", "users"));
+
+            int newexp, level;
+            level = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(userid), "discord_id", "users"));
 
             int fights, wins, loses;
             fights = Convert.ToInt32(provider.GetFieldAwonaByID("fights", Convert.ToString(userid), "discord_id", "stats"));
@@ -214,12 +218,18 @@ namespace Bot.Modules
 
             if (winner)
             {
-                provider.ExecuteSQL($"UPDATE users SET exp = {exp + 15} WHERE discord_id = {userid}");
+                newexp = exp + 50;
+                if (newexp > expForLevel[level - 1]) level++;
+
+                provider.ExecuteSQL($"UPDATE users SET exp = {newexp}, level = {level} WHERE discord_id = {userid}");
                 provider.ExecuteSQL($"UPDATE stats SET fights = {fights + 1} WHERE discord_id = {userid}");
                 provider.ExecuteSQL($"UPDATE stats SET wins = {wins + 1} WHERE discord_id = {userid}");
             } else
             {
-                provider.ExecuteSQL($"UPDATE users SET exp = {exp + 10} WHERE discord_id = {userid}");
+                newexp = exp + 25;
+                if (newexp > expForLevel[level - 1]) level++;
+
+                provider.ExecuteSQL($"UPDATE users SET exp = {newexp}, level = {level} WHERE discord_id = {userid}");
                 provider.ExecuteSQL($"UPDATE stats SET fights = {fights + 1} WHERE discord_id = {userid}");
                 provider.ExecuteSQL($"UPDATE stats SET loses = {loses + 1} WHERE discord_id = {userid}");
             }
