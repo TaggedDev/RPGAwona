@@ -19,7 +19,7 @@ namespace Bot.Modules
 {
     class FightHandler
     {
-        public string ConvertType(string type)
+        private string ConvertType(string type)
         {
             return type switch
             {
@@ -96,15 +96,14 @@ namespace Bot.Modules
             while (player1.Health > 0 && player2.Health > 0 && !surrender1 && !surrender2)
             {
                 byte time = 10;
-
                 Embed embed1, embed2;
-                
+
                 var first = FightMessage(user1, user2, player1, player2);
                 var second = FightMessage(user2, user1, player2, player1);
-                
+
                 embed1 = first.Build();
                 embed2 = second.Build();
-                
+
                 await textChannel1.SendMessageAsync(embed: embed1);
                 await textChannel2.SendMessageAsync(embed: embed2);
 
@@ -120,7 +119,7 @@ namespace Bot.Modules
 
                 // Get player1move and player2move from SQL table `duel`
                 string player1move, player2move;
-                player1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel")); 
+                player1move = Convert.ToString(provider.GetFieldAwonaByID("player1move", Convert.ToString(user1.Id), "player1id", "duel"));
                 player2move = Convert.ToString(provider.GetFieldAwonaByID("player2move", Convert.ToString(user2.Id), "player2id", "duel"));
 
                 int player1damage, player2damage;
@@ -130,58 +129,33 @@ namespace Bot.Modules
                 ResultMessage(player1damage, player2damage, counter, textChannel1, textChannel2);
                 counter++;
 
-                if (player2damage < 0) player2damage = 0;
-                if (player1damage < 0) player1damage = 0;
-
-                player1.Health -= player2damage;
-                player2.Health -= player1damage;
-
-                string player1id = Convert.ToString(user1.Id), player2id = Convert.ToString(user2.Id);
-                provider.ExecuteSQL($"UPDATE duel SET player1move = 'Sleep' WHERE player1id = {player1id}");
-                provider.ExecuteSQL($"UPDATE duel SET player2move = 'Sleep' WHERE player2id = {player2id}");
+                CountDamageAndReset(user1, user2, player1, player2, ref player1damage, ref player2damage);
 
                 surrender1 = Convert.ToBoolean(provider.GetFieldAwonaByID("player1surrender", Convert.ToString(user1.Id), "player1id", "duel"));
                 surrender2 = Convert.ToBoolean(provider.GetFieldAwonaByID("player2surrender", Convert.ToString(user2.Id), "player2id", "duel"));
-                
+
             }
 
             // DM results
             await FinishDuel(user1, user2, player1, player2, textChannel1, textChannel2, surrender1, surrender2, publicrole, firstplayer, secondplayer, category);
         }
 
+        private static void CountDamageAndReset(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ref int player1damage, ref int player2damage)
+        {
+            if (player2damage < 0) player2damage = 0;
+            if (player1damage < 0) player1damage = 0;
+
+            player1.Health -= player2damage;
+            player2.Health -= player1damage;
+
+            string player1id = Convert.ToString(user1.Id), player2id = Convert.ToString(user2.Id);
+            provider.ExecuteSQL($"UPDATE duel SET player1move = 'Sleep' WHERE player1id = {player1id}");
+            provider.ExecuteSQL($"UPDATE duel SET player2move = 'Sleep' WHERE player2id = {player2id}");
+        }
+
         private async Task FinishDuel(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ITextChannel textChannel1, ITextChannel textChannel2, bool surrender1, bool surrender2, IRole publicrole, IRole firstplayer, IRole secondplayer, ICategoryChannel category)
         {
-
-            if (player2.Health < 0)
-            {
-                await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
-                GainExperienceVersus(user1.Id, true);
-                GainExperienceVersus(user2.Id, false);
-            }
-                
-            else if (player1.Health < 0)
-            {
-                await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
-                GainExperienceVersus(user1.Id, false);
-                GainExperienceVersus(user2.Id, true);
-            }
-                
-
-            else if (surrender1)
-            {
-                await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
-                GainExperienceVersus(user1.Id, false);
-                GainExperienceVersus(user2.Id, true);
-            }
-                
-            else if (surrender2)
-            {
-                await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
-                GainExperienceVersus(user1.Id, true);
-                GainExperienceVersus(user2.Id, false);
-            }
-            else
-                Console.WriteLine("Error");
+            await SendFinishMessageAndUpdateSQL(user1, user2, player1, player2, surrender1, surrender2);
 
             provider.ExecuteSQL($"DELETE FROM duel WHERE player1id = {user1.Id}");
 
@@ -192,18 +166,64 @@ namespace Bot.Modules
             textChannel2.DeleteAsync();
             category.DeleteAsync();
 
-            
         }
 
-        private void GainExperienceVersus(ulong userid, bool winner)
+        private async Task SendFinishMessageAndUpdateSQL(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, bool surrender1, bool surrender2)
+        {
+            if (player2.Health < 0)
+            {
+                await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
+                UpdateTablesVersus(user1.Id, true);
+                UpdateTablesVersus(user2.Id, false);
+            }
+
+            else if (player1.Health < 0)
+            {
+                await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
+                UpdateTablesVersus(user1.Id, false);
+                UpdateTablesVersus(user2.Id, true);
+            }
+
+
+            else if (surrender1)
+            {
+                await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
+                UpdateTablesVersus(user1.Id, false);
+                UpdateTablesVersus(user2.Id, true);
+            }
+
+            else if (surrender2)
+            {
+                await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
+                UpdateTablesVersus(user1.Id, true);
+                UpdateTablesVersus(user2.Id, false);
+            }
+            else
+                Console.WriteLine("Error");
+        }
+
+        private void UpdateTablesVersus(ulong userid, bool winner)
         {
             int exp;
             exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(userid), "discord_id", "users"));
 
+            int fights, wins, loses;
+            fights = Convert.ToInt32(provider.GetFieldAwonaByID("fights", Convert.ToString(userid), "discord_id", "stats"));
+            wins = Convert.ToInt32(provider.GetFieldAwonaByID("wins", Convert.ToString(userid), "discord_id", "stats"));
+            loses = Convert.ToInt32(provider.GetFieldAwonaByID("loses", Convert.ToString(userid), "discord_id", "stats"));
+
             if (winner)
+            {
                 provider.ExecuteSQL($"UPDATE users SET exp = {exp + 15} WHERE discord_id = {userid}");
-            else
+                provider.ExecuteSQL($"UPDATE stats SET fights = {fights + 1} WHERE discord_id = {userid}");
+                provider.ExecuteSQL($"UPDATE stats SET wins = {wins + 1} WHERE discord_id = {userid}");
+            } else
+            {
                 provider.ExecuteSQL($"UPDATE users SET exp = {exp + 10} WHERE discord_id = {userid}");
+                provider.ExecuteSQL($"UPDATE stats SET fights = {fights + 1} WHERE discord_id = {userid}");
+                provider.ExecuteSQL($"UPDATE stats SET loses = {loses + 1} WHERE discord_id = {userid}");
+            }
+                
             return;
         }
 
@@ -262,7 +282,7 @@ namespace Bot.Modules
                     .ConfigureAwait(false);
         }
 
-        public EmbedBuilder FightMessage(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2)
+        private EmbedBuilder FightMessage(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2)
         {
             // Generate Characters' names for embed
             string user1name, user2name;
@@ -293,7 +313,7 @@ namespace Bot.Modules
             return builder;
         }
 
-        public async Task FinishMessage(SocketGuildUser user1, SocketGuildUser user2, string winnerName, bool isSurrender)
+        private async Task FinishMessage(SocketGuildUser user1, SocketGuildUser user2, string winnerName, bool isSurrender)
         {
 
             Subcommand sbc = new Subcommand();
