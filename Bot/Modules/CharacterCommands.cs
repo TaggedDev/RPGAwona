@@ -99,8 +99,9 @@ namespace Bot.Modules
                 };
                 await (Context.User as IGuildUser).RemoveRoleAsync(role);
 
-                command = $"DELETE FROM users WHERE discord_id = {id}";
-                provider.ExecuteSQL(command);
+                provider.ExecuteSQL($"DELETE FROM users WHERE discord_id = {id}");
+                provider.ExecuteSQL($"DELETE FROM stats WHERE discord_id = {id}");
+
                 await ReplyAsync(":white_check_mark: Персонаж успешно удалён");
             }
             else
