@@ -153,13 +153,33 @@ namespace Bot.Modules
         {
 
             if (player2.Health < 0)
+            {
                 await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
+                GainExperienceVersus(user1.Id, true);
+                GainExperienceVersus(user2.Id, false);
+            }
+                
             else if (player1.Health < 0)
+            {
                 await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
+                GainExperienceVersus(user1.Id, false);
+                GainExperienceVersus(user2.Id, true);
+            }
+                
+
             else if (surrender1)
+            {
                 await FinishMessage(user1, user2, user2.Username + "#" + user2.Discriminator, surrender1 || surrender2);
+                GainExperienceVersus(user1.Id, false);
+                GainExperienceVersus(user2.Id, true);
+            }
+                
             else if (surrender2)
+            {
                 await FinishMessage(user1, user2, user1.Username + "#" + user1.Discriminator, surrender1 || surrender2);
+                GainExperienceVersus(user1.Id, true);
+                GainExperienceVersus(user2.Id, false);
+            }
             else
                 Console.WriteLine("Error");
 
@@ -172,17 +192,19 @@ namespace Bot.Modules
             textChannel2.DeleteAsync();
             category.DeleteAsync();
 
-            GainExperience(user1.Id, user2.Id, player1, player2);
+            
         }
 
-        private async void GainExperience(ulong user1id, ulong user2id, Archetype player1, Archetype player2)
+        private void GainExperienceVersus(ulong userid, bool winner)
         {
-            int p1exp, p2exp;
-            p1exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(user1id), "player1id", "duel"));
-            p2exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(user2id), "player2id", "duel"));
+            int exp;
+            exp = Convert.ToInt32(provider.GetFieldAwonaByID("exp", Convert.ToString(userid), "discord_id", "users"));
 
-            provider.ExecuteSQL("UPDATE ");
-
+            if (winner)
+                provider.ExecuteSQL($"UPDATE users SET exp = {exp + 15} WHERE discord_id = {userid}");
+            else
+                provider.ExecuteSQL($"UPDATE users SET exp = {exp + 10} WHERE discord_id = {userid}");
+            return;
         }
 
         private async void ResultMessage(int player1damage, int player2damage, int counter, ITextChannel tc1, ITextChannel tc2)
