@@ -156,7 +156,7 @@ namespace Bot.Modules
         private async Task FinishDuel(SocketGuildUser user1, SocketGuildUser user2, Archetype player1, Archetype player2, ITextChannel textChannel1, ITextChannel textChannel2, bool surrender1, bool surrender2, IRole publicrole, IRole firstplayer, IRole secondplayer, ICategoryChannel category)
         {
             await SendFinishMessageAndUpdateSQL(user1, user2, player1, player2, surrender1, surrender2);
-
+            
             provider.ExecuteSQL($"DELETE FROM duel WHERE player1id = {user1.Id}");
 
             publicrole.DeleteAsync();

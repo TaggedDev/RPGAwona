@@ -70,7 +70,7 @@ namespace Bot
                 })
                 .UseConsoleLifetime();
 
-            //ExecuteSQL("DROP TABLE users");
+            //ExecuteSQL("DROP TABLE stats");
             //ExecuteSQL("DROP TABLE duel");
             //ExecuteSQL($"DELETE FROM duel WHERE player1id = {327391902167203841}");
             ExecuteSQL("CREATE TABLE IF NOT EXISTS stats (discord_id INTEGER NOT NULL UNIQUE, wins INTEGER, loses INTEGER, fights INTEGER)");
