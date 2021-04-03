@@ -11,12 +11,13 @@ namespace Bot.Types.Serenity
 
         public Asigaru(string name, ulong id)
         {
+            int level = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(id), "discord_id", "users")); 
             _name = name;
             _id = id;
-            _lvl = Convert.ToInt32(provider.GetFieldAwonaByID("level", Convert.ToString(Id), "discord_id", "users"));
-            _health = 33;
-            _damage = 43;
-            _armor = 23;
+            _lvl = level;
+            _health = TakeBonusForLevel(level, "health");
+            _damage = TakeBonusForLevel(level, "damage");
+            _armor = TakeBonusForLevel(level, "armor");
             _protection = 1.5f;
             _dodge = 0.3f;
             _luck = 0.5f;
