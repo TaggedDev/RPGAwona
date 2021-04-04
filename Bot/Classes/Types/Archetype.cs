@@ -34,23 +34,6 @@ namespace Bot.Types
         public virtual float Dodge { get => _dodge; set => _dodge = value; } // dodge chance
         public virtual string Move { get => _move; set => _move = value; } // player's choose
 
-        public int TakeBonusForLevel(int level, string stat)
-        {
-            //int[] stats_sum = { 18, 21, 25, 30, 36, 43, 51, 61, 73, 87, 104, 124, 148, 177, 212, 254, 304, 364, 436, 523 };
-            int[] lvlhealth = { 30, 36, 44, 51, 61, 73, 88, 105, 126, 150, 180, 216, 258, 310, 371, 445, 533, 640, 768, 921 };
-            int[] lvldamage = { 47, 56, 67, 81, 97, 116, 139, 167, 200, 241, 289, 346, 416, 499, 599, 718, 862, 1034, 1241, 1489 };
-            int[] lvlarmor = { 23, 28, 33, 40, 48, 58, 69, 83, 100, 120, 144, 173, 208, 249, 299, 359, 431, 517, 620, 744 };
-
-            if (stat.Equals("health"))
-                return lvlhealth[level - 1];
-            else if (stat.Equals("damage"))
-                return lvldamage[level - 1];
-            else if (stat.Equals("armor"))
-                return lvlarmor[level - 1];
-
-            return 0;
-        }
-
         public object GetFieldSQL(ulong id, string field, string table)
         {
             using (var connection = new SqliteConnection("Data Source=awona.db"))
